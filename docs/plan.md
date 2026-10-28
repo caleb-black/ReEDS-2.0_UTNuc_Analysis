@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D36 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D37 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -45,10 +45,10 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 
 - **03a\_prices** (D6, D9) — Per region and year: average energy price, average all-in price, peak price with block name and hours, 2nd and 3rd peaks, peak/average ratio. Also the group price per block (D14).
 - **03b\_system\_cost** (D10) — Sum of `inv_*` and `op_*` from `systemcost_ba_bulk_ew` for 2044, 2047, 2050.
-- **03c\_trade** — Net imports; expenditure flows by type; new lines.
+- **03c\_trade** — Expenditure flows by type. Net imports and new lines are read from the stage 01 files, not copied (D37f).
 - **03d\_capacity\_generation** — Capacity and generation by technology, with share of the regional total.
-- **03e\_price\_setter** (D12) — Per block: highest running cost of the techs that run; gap to the price; price-setter or "set by something else".
-- **03f\_line\_use** (D9) — Line use in each peak block, from `tran_util_h_rep`.
+- **03e\_price\_setter** (D12) — Per block: highest running cost of the techs that run; gap to the price; price-setter or "set by something else". Rules in D37c.
+- **03f\_line\_use** (D9, D37d) — Line use in each peak block, from `tran_util_h_rep`.
   - **You check:** a map of average price for the 0 GW `ref` case of each batch. Compare it by eye with the bokehpivot "Energy Price Final BA Map" of the same run. Also the plot of all price gaps from 03e.
 
 ### 04\_analyze: groups and differences
@@ -64,7 +64,7 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 
 - **05a\_group\_figures** — Primary results per group: price, peak, ratio, cost.
 - **05b\_region\_maps** (D15) — Maps of average price, Diff in price, Diff in system cost; `expenditure_flow` map next to the cost map. Shapes from `inputs/shapefiles/US_PCA/` (merge p28 and p30 into z28).
-- **05c\_price\_setter\_figures** — Share of blocks per price-setter type, by level.
+- **05c\_price\_setter\_figures** — Share of blocks per price-setter type, by level. Tech groups and colors from ReEDS `tech_map.csv` and `tech_style.csv` (D37g), in all figures.
 - **05d\_wide\_tables** — One wide CSV per metric and batch: arm, region or group, year, value per level, Diff per level.
   - **You check:** each figure has a one-line statement under it that you agree with.
 
@@ -84,7 +84,7 @@ Two questions: what is the prescribed SMR worth to the system, and what does it 
 
 - **03g\_smr\_value** — For `Nuclear-SMR` in p25, each case and year from 2044: `val_load`, `val_resmarg`, `val_opres`, `val_rps` from `valnew`. Report them per kW-yr and per MWh. Show the value by service as stacked bars by level. If any case builds other nuclear types in p25, show them apart.
 - **03h\_smr\_cost\_gap** — Net value = value minus the SMR's annual cost. INFERENCE: for a forced build, a negative net value is the part the system pays to force it in. Cost side (D19): `lcoe_built` for `Nuclear-SMR` in p25 (`report_params.csv` L116; `report.gms` L264). Net value of energy = value per MWh (`valnew` value / `valnew` MWh) minus `lcoe_built`, as the NVOE in `model_documentation.md` L3333-3354.
-- **03i\_smr\_reduced\_cost** — In each 0 GW case: the `reduced_cost` of `INV` for `Nuclear-SMR` in p25 in 2044. INFERENCE: this is how far, in $/kW, the SMR is from being built by the model's own choice. In the prescribed cases the investment is basic, so its reduced cost is about zero and tells us nothing.
+- **03i\_smr\_reduced\_cost** — Not built (D37e): the `INV` reduced cost is absent in every case. Original intent: in each 0 GW case: the `reduced_cost` of `INV` for `Nuclear-SMR` in p25 in 2044. INFERENCE: this is how far, in $/kW, the SMR is from being built by the model's own choice. In the prescribed cases the investment is basic, so its reduced cost is about zero and tells us nothing.
 - **04f\_forcing\_cost\_curve** — A proxy for the dual, from outputs you already have: the change in system cost (D10) per GW between neighboring levels (0 to 0.5, 0.5 to 1, ...). INFERENCE: a shadow price is the change in the objective for one more unit on the right side of the constraint (`model_documentation.md` L3214-3220). The finite difference between levels is the average of that value over the step. Compare it with 03h.
   - **You check:** one figure per arm with three lines against level: the forcing-cost curve, minus the net value per kW (03h), and the 0 GW reduced cost (03i, one point). If the model is consistent, the three should tell the same story.
 
