@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D31 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D33 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -28,9 +28,9 @@ There are six stages. The two gates that can stop the work are in stage 02.
 
 ### 01\_ingest: copy raw files, change nothing
 
-- **01a\_load\_outputs** — Reads each key in "Outputs read from each run" from `outputs.h5` for every case (D29). Renames the `*` columns by position (type, subtype, r, h, t). Adds batch, arm, level, case. Lists absent keys (an absent key is an empty table).
-- **01b\_load\_inputs** — Reads `inputs_case/rep/numhours.csv` for every case. (`cost_vom`, `heat_rate`, `fuel_price` are `outputs.h5` keys, read in 01a.)
-  - Out: one long table per output key, with UON and UOS rows kept apart by `batch` (D26).
+- **01a\_load\_outputs** — Reads each key in "Outputs read from each run" from `outputs.h5` for every case (D29). Renames the `*` columns by position (type, subtype, r, h, t) and `allh` to `h` (D33). Adds batch, arm, level, case. Lists absent keys (an absent key is an empty table).
+- **01b\_load\_inputs** — Reads `inputs_case/rep/numhours.csv` for every case. Checks the block count per arm: 152, or 144 in `loadhigh` and `loadlow` (D32). (`cost_vom`, `heat_rate`, `fuel_price` are `outputs.h5` keys, read in 01a.)
+  - Out: one long table per output key, with UON and UOS rows kept apart by `batch` (D26). HDFStore table format, one file per key (D33). Keeps `t`, `Value` and model units.
   - **You check:** row count per case per file. Cases of one arm have similar counts. A missing file is listed by name.
 
 ### 02\_clean: prove the runs are fit to use
@@ -38,7 +38,7 @@ There are six stages. The two gates that can stop the work are in stage 02.
 - **02a\_trunk\_gate** (D4) — (D28) Within each batch, each branch equals its trunk (0.5 GW case of the same arm) for every year up to 2041, in every output. **Stops on failure.**
 - **02b\_setup\_checks** — p25 coal is near zero from 2044. p25 nuclear equals the level in each case. Where the model also builds nuclear on its own, prescribed and endogenous nuclear are shown apart. The 0 GW cases have no new p25 nuclear.
 - **02c\_neighbor\_list** (D7) — In each batch, builds the neighbor list from `tran_out` (that batch's 0 GW `ref`, both columns; D31). Compares it with the expected list (p12, p16, p21, p27, p31, p33, z28). **Stops if they differ.**
-- **02d\_units** — Confirms units per file against `docs/data_dictionary.md`. Confirms all solve years are present.
+- **02d\_units** — Confirms units per file against `docs/data_dictionary.md`. Confirms all solve years are present. Renames `t` to `year` and `Value` to `value`, and adds the `unit` column (plan rule 3, D33).
   - **You check:** the gate report (pass or fail per case and file), and one plot of p25 capacity by technology over time, one panel per case.
 
 ### 03\_derive: one value per region, year, case
