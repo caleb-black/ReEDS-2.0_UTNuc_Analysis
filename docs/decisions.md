@@ -1,6 +1,6 @@
 # p25 nuclear study: decision log
 
-Nineteen decisions are settled. Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
+Twenty-three decisions are settled. Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
 
 | ID | Decided | Decision | Source or reason |
 | --- | --- | --- | --- |
@@ -23,6 +23,10 @@ Nineteen decisions are settled. Citations are for ReEDS commit `0c0ea27`. Do not
 | D17 | 2026-10-27 | Model setup: `GSw_Region=interconnect/western`, `GSw_ZoneSet=z132` (34 western zones; p28 and p30 merged into `z28`), gas curve 2, Clean Air Act off, upgrades off, EER load scenarios. | Caleb, 27 Oct; `cases.csv` and `inputs/zones/z132/` at `0c0ea27`. |
 | D18 | 2026-10-27 | Scripts in Python, in the conda `reeds` environment from `environment.yml` at `0c0ea27`, without the GAMS packages (`gamsapi`, `gamspy_base`). Scripts read CSV outputs only, because GDX files need the GAMS API. | Caleb, 27 Oct. |
 | D19 | 2026-10-27 | SMR net value of energy = `valnew` value per MWh minus `lcoe_built` (Nuclear-SMR, p25). The prescription dual comes from an output file Caleb adds; the system cost change per GW is a cross-check. | NVOE in `model_documentation.md` L3333-3354; `report_params.csv` L116. Caleb, 27 Oct. |
+| D20 | 2026-10-28 | Agent team: Builder, Verifier, Reviewer (with source check), Cost-driver analyst, Explainer. Bounds in `docs/plan.md`, "Agent team". Caleb makes every analysis choice and does every merge. Any agent that meets a choice not in this log stops and asks. | Caleb, 28 Oct. |
+| D21 | 2026-10-28 | The Verifier does not see the Builder's code. It sends the Builder only what is different (metric, case, both values, gap), never its method. It reports a relative gap above 1e-4. The Builder has one try to fix each gap; a gap that stays goes to Caleb. | Caleb, 28 Oct. Keeps the check independent. |
+| D22 | 2026-10-28 | The Cost-driver analyst proposes cost-split methods as new decision entries. After Caleb approves one, the Builder writes it as a `04_analyze` script and the Verifier checks it. The analyst only explains outputs. | Caleb, 28 Oct. Only one agent writes pipeline code. |
+| D23 | 2026-10-28 | Keep credit use low: five agents; the analyst and the Explainer start at stage 04; the Verifier checks three sample cases (`med` 0 GW, `med` 3 GW, `txstBA` 2.5 GW); each citation is checked once (`docs/checked_citations.md`); small context per agent; smaller models for the routine checks; one fix round. | Caleb, 28 Oct. |
 
 ## On hold
 

@@ -2,7 +2,7 @@
 
 Oct 27, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D19 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D23 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -88,6 +88,41 @@ Two questions: what is the prescribed SMR worth to the system, and what does it 
 - **04f\_forcing\_cost\_curve** — A proxy for the dual, from outputs you already have: the change in system cost (D10) per GW between neighboring levels (0 to 0.5, 0.5 to 1, ...). INFERENCE: a shadow price is the change in the objective for one more unit on the right side of the constraint (`model_documentation.md` L3214-3220). The finite difference between levels is the average of that value over the step. Compare it with 03h.
   - **You check:** one figure per arm with three lines against level: the forcing-cost curve, minus the net value per kW (03h), and the 0 GW reduced cost (03i, one point). If the model is consistent, the three should tell the same story.
 
+## Agent team
+
+Five agents do the work. You make every analysis choice and do every merge (D20). Every agent works under `CLAUDE.md` and reads only what its role needs (D23).
+
+| Agent | Does | May write | May not |
+| --- | --- | --- | --- |
+| Builder | Writes the scripts for one stage, on that stage's branch, as this plan says. Fixes what the Verifier and the Reviewer report. | Scripts in `00_config/` to `05_visualize/`. | Edit `docs/`. Make an analysis choice that is not in `docs/decisions.md`. |
+| Verifier | Recomputes the check values from the raw CSV files with its own calculation. Does not read the Builder's code (D21). | Its own check files, outside the pipeline. | Read the Builder's scripts. Send its method to the Builder. |
+| Reviewer | Checks each PR against this plan, `CLAUDE.md` and `docs/decisions.md`. Checks each new model claim against a file and line at `0c0ea27`, or marks it "Not covered in the documentation". | Review comments. New rows in `docs/checked_citations.md`. | Merge. Change scripts. |
+| Cost-driver analyst | From stage 04: proposes how to split each change in system cost into generation, capacity and transmission parts, and links them to price changes. Explains the results. All reasoning beyond the docs is marked INFERENCE (D22). | Proposed decision entries for you. Notes on results. | Write pipeline scripts. Apply a method that you have not approved. |
+| Explainer | From stage 04: writes the plain-language text for each stage and figure, from the outputs and `docs/data_dictionary.md` only. | Text under each figure; the summary of each stage. | Add a claim that is not in the outputs or the docs. |
+
+**Order of work in each stage**
+
+1. The Builder writes the stage scripts and runs them. Each stage writes its check report.
+2. The Verifier recomputes the check values for the sample cases: `med` 0 GW, `med` 3 GW, `txstBA` 2.5 GW (D23). The trunk gate script already compares every case.
+3. The Verifier tells the Builder only what is different: the metric, the case, both values and the gap. It reports any relative gap above 1e-4 (D21).
+4. The Builder has one try to fix each gap. If a gap stays, it goes to you with both values. You check the logic.
+5. The Reviewer checks the PR. A failed check blocks the PR.
+6. You read the check report, the Verifier result and the review, and you merge or ask for changes.
+
+**New methods (stage 04 and later).** The Cost-driver analyst proposes a method as a new decision entry. After you approve it, the Builder writes it as a `04_analyze` script. The Verifier checks it, as for every other script. Then the analyst reads the outputs and explains them (D22).
+
+**Stop rule.** Any agent that meets a choice that is not in `docs/decisions.md` stops and asks you. No agent changes data to make a check pass.
+
+**Keep credit use low (D23)**
+
+- Five agents, not six: the Reviewer also does the source check.
+- The Cost-driver analyst and the Explainer start at stage 04.
+- The Verifier checks a fixed sample of three cases, not all cases.
+- Each citation is checked once and listed in `docs/checked_citations.md`. The Reviewer checks only new citations.
+- Each agent reads only its part of this plan and the stage check report, not the raw data or the thread history.
+- Use smaller models for the Verifier and the Reviewer checklist. Use the larger model for the Builder and the analyst.
+- One fix round between the Verifier and the Builder. After that, the gap comes to you.
+
 ## Git
 
 Commit the scripts, the config and the docs. Do not commit run data or generated outputs. The folder layout is the one in `CLAUDE.md`.
@@ -96,7 +131,7 @@ Commit the scripts, the config and the docs. Do not commit run data or generated
 | --- | --- | --- |
 | `00_config/` to `05_visualize/` (scripts) | Yes | The analysis itself. |
 | `00_config/` study tables (cases, groups) | Yes | Small, written by hand, needed to rerun. |
-| `docs/plan.md`, `docs/decisions.md`, `docs/data_dictionary.md` | Yes | The plan, the data dictionary and the decision log. |
+| `docs/plan.md`, `docs/decisions.md`, `docs/data_dictionary.md`, `docs/checked_citations.md` | Yes | The plan, the data dictionary and the decision log. |
 | Raw ReEDS run folders | No | Large; referenced by path only (`CLAUDE.md`). |
 | `outputs/` (tables, figures) | No, for now | Generated. Can be rebuilt from scripts. Decide later if final figures go in Git LFS. |
 | Check reports from each stage | No | Generated; you read them, they are not the record. |
@@ -105,7 +140,7 @@ Commit the scripts, the config and the docs. Do not commit run data or generated
 
 ## CLAUDE.md
 
-The working rules from this plan are also in `CLAUDE.md` (source of truth, scenarios, working rules, Git).
+The working rules from this plan are also in `CLAUDE.md` (source of truth, scenarios, working rules, agent team, Git).
 
 ## On hold and open items
 

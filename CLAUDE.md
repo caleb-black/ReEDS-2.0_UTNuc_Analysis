@@ -50,7 +50,7 @@ Script names per stage are listed in `docs/plan.md`.
 ## Scenarios
 - Arms, levels, baselines, groups and metrics: `docs/data_dictionary.md`.
 - Run folders: listed in `00_config/` (stage 00a).
-- Decisions D1 to D19: `docs/decisions.md`. Do not change a decision in code; propose a
+- Decisions D1 to D23: `docs/decisions.md`. Do not change a decision in code; propose a
   new decision entry instead.
 - Compare only within an arm, against that arm's own 0 GW case (D2).
 
@@ -60,6 +60,11 @@ Script names per stage are listed in `docs/plan.md`.
   and wait. Never edit data to make a check pass.
 - Keep tables long between stages. Wide tables only in 05_visualize.
 - Convert 2004 USD to 2024 USD (x 1.6563) only in 03_derive.
+
+## Agent team
+- Five agents with fixed bounds: `docs/plan.md`, "Agent team" (D20 to D23).
+- Caleb makes every analysis choice and does every merge.
+- The Verifier never reads the Builder's code and sends only results and gaps.
 
 ## Git
 - Branch per stage or feature. Commit messages reference the stage (`[02_clean] ...`).
