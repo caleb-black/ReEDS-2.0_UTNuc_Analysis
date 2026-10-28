@@ -73,7 +73,7 @@ Every region belongs to exactly one of the first four groups. `wecc` is the sum 
 
 ## Arms and their baselines
 
-Every arm uses its own 0 GW case in the same batch as baseline (D2, D27). Switch values are from `inputs_case/switches.csv` of the 0.5 GW cases in UON; line numbers are for `cases.csv` at `0c0ea27`.
+Every arm uses its own 0 GW case in the same batch as baseline (D2, D27). Switch values are from `inputs_case/switches.csv`; 00a checks every case against its batch's `ref` 0 GW case (the 0.5 GW trunks differ from it only in `keep_g00_files`). Line numbers are for `cases.csv` at `0c0ea27`. Values in `ref`: `ngscen` = `AEO_2026_baseline`, `plantchar_upv` = `upv_ATB_2024_moderate`, `plantchar_nuclear_smr` = `nuclear-smr_ATB_2024_moderate`.
 
 **UON (upgrades off): 6 arms, 78 cases**
 
