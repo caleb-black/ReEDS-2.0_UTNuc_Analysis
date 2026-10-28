@@ -64,8 +64,11 @@ KEY_UNITS = {
 }
 # Keys whose unit differs by a type column: (column, {value: unit}).
 TYPE_UNITS = {
-    "reqt_price": ("type", {"load": "2004 $/MWh"}),
-    "reqt_quant": ("type", {"load": "MWh per block"}),
+    # data_dictionary.md (D37 update; report.gms L330-331, L366 at 0c0ea27)
+    "reqt_price": ("type", {"load": "2004 $/MWh", "oper_res": "2004 $/MWh",
+                            "res_marg": "2004 $/MW per stress timeslice"}),
+    "reqt_quant": ("type", {"load": "MWh per block", "oper_res": "MWh",
+                            "res_marg": "MW"}),
     # data_dictionary.md: valnew "2004 $, MW, MWh"; the value types are named in
     # docs/plan.md "What the files are" (val_load, val_resmarg, val_opres,
     # val_rps; MW and MWh of the new build). `_sys` and other types: no unit.
