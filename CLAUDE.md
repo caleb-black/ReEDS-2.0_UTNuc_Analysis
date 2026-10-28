@@ -51,7 +51,7 @@ Script names per stage are listed in `docs/plan.md`.
 ## Scenarios
 - Arms, levels, baselines, groups and metrics: `docs/data_dictionary.md`.
 - Run folders: listed in `00_config/` (stage 00a).
-- Decisions D1 to D35: `docs/decisions.md`. Do not change a decision in code; propose a
+- Decisions D1 to D36: `docs/decisions.md`. Do not change a decision in code; propose a
   new decision entry instead.
 - Compare only within an arm, against that arm's own 0 GW case in the same batch (D2). Never mix UON and UOS (D26).
 
