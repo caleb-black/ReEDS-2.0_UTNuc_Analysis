@@ -1,6 +1,6 @@
 # p25 nuclear study: decision log
 
-Thirty-four decisions are settled (D1 to D34). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
+Thirty-five decisions are settled (D1 to D35). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
 
 | ID | Decided | Decision | Source or reason |
 | --- | --- | --- | --- |
@@ -38,10 +38,12 @@ Thirty-four decisions are settled (D1 to D34). Citations are for ReEDS commit `0
 | D32 | 2026-10-28 | Blocks: each case uses all of its own blocks with its own `numhours` weights. `ref`, `gaslow`, `pvadv`, `smrcons` have 152 blocks (19 days × 8); `loadhigh` and `loadlow` have 144 (18 days × 8), with block sets that differ from `ref` and from each other. This is accepted as the model fitting days to the load profile. No ratio-only rule for peaks. All levels of one arm share the same blocks and weights, so the Diff (D2) compares the same blocks. | Caleb, 28 Oct. 01b check; `numhours.csv` identical across levels within each load arm (checked 28 Oct). |
 | D33 | 2026-10-28 | Stage 01 storage and names. Tables are written as pandas HDFStore table format (PyTables, zstd), one file per key; no parquet (`pyarrow` is not in the env). 01a renames `allh` to `h` (in `gen_h` and `tran_util_h_rep`), as `reeds/io.py` `read_output` does (L524 at `0c0ea27`). 01 keeps `t` and `Value` and float32; the rename to `year` and `value` and the `unit` column (plan rule 3) are added in 02d. 01a also reads `valnew`, `reduced_cost` and `lcoe_built` for 03g to 03i. | Caleb, 28 Oct. |
 | D34 | 2026-10-29 | No trunk gate. 02a is not built or run. Caleb made the runs with a trunk/branch setup (branches restart from the 0.5 GW trunk at 2044) and checked them earlier, so each branch is taken to equal its trunk through 2041. Replaces the gate in D4 and D28; the trunk and branch terms stay. | Caleb, 29 Oct. |
+| D35 | 2026-10-29 | Stage 02 is reduced. (a) Neighbors of p25 are all zones joined to it by any line in `tran_out` of the batch's `ref` 0 GW case, AC or DC: p10 (LCC), p12, p16, p21, p24 (VSC), p27, p31, p33, z28. Nine zones in both batches; `rest_wecc` has 23. 02c checks `tran_out` against this list and stops if they differ. (b) The 02b setup checks (coal, nuclear) are not run as gates; Caleb confirmed the setup. (c) 02d does not check units: it renames `t`/`Value` to `year`/`value` and adds `unit` from the data dictionary, or "not stated" where the dictionary has none. | Caleb, 29 Oct. 02c found p10 and p24 in `tran_out`; `interfaces_r.csv` lists AC interfaces only. |
 
 ## On hold
 
 - The group-to-group trade table and the cost views A (where cost is incurred), B (after trade) and C (load payment at marginal prices). Caleb decides. Until then, `03c_trade` builds only net imports, expenditure flows and new lines.
+- Converter costs before 2044 (for Caleb to look at later). `systemcost_ba_bulk_ew`, category `inv_converter_costs`, differs between branch and trunk in 1 to 4 (region, year) rows before 2044, in every batch and arm (up to 7.6%, UON `pvadv`; up to 3.7e7 2004 $). `cap_ivrt`, `tran_out` and `valnew` were equal; other keys were not compared. Formula: `report.gms` L1534-1541 at `0c0ea27`. Why a branch differs before 2044 is not covered in the documentation. Found 28 Oct by the 02 builder; D34 does not cover it. D10 uses only 2044, 2047, 2050, so results are not expected to change.
 
 ## Removed scripts
 

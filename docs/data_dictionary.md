@@ -41,7 +41,7 @@ Every region belongs to exactly one of the first four groups. `wecc` is the sum 
 | --- | --- | --- |
 | `focus` | p25 | Fixed. The nuclear plant is here. |
 | `utah_rest` | p26 | Fixed. The other half of Utah. |
-| `neighbors` | Zones directly connected to p25, without p26 | From `tran_out` in the batch's own 0 GW `ref` case (D31). Read both the `r` and `rr` columns. The list is fixed for all cases of that batch. Expected from the z132 interface list: p12, p16, p21, p27, p31, p33, z28 (`inputs/zones/z132/interfaces_r.csv`). If `tran_out` gives a different list, stop and check. |
+| `neighbors` | Zones directly connected to p25, without p26 | From `tran_out` in the batch's own 0 GW `ref` case (D31). Read both the `r` and `rr` columns, any line type (AC or DC). The list is fixed for all cases of that batch. Expected (D35): p10, p12, p16, p21, p24, p27, p31, p33, z28. The AC interfaces in `inputs/zones/z132/interfaces_r.csv` give seven of these; p10 (LCC) and p24 (VSC, from 2032) are DC lines. If `tran_out` gives a different list, stop and check. |
 | `rest_wecc` | All other western zones | The 34 western zones of z132, minus the three groups above. |
 | `wecc` | All 34 western zones | The whole system. |
 
