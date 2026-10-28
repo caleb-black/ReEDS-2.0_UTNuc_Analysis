@@ -28,7 +28,8 @@ analysis top to bottom.
 04_analyze/       # comparisons across scenarios
 05_visualize/     # figures and tables
 outputs/          # generated artifacts (git-ignored or LFS)
-docs/             # plan.md, decisions.md, data_dictionary.md
+docs/             # plan.md, decisions.md, data_dictionary.md, how_to_run.md
+notes/            # agent proposals, analysis notes, figure text (D24)
 archive/          # superseded scripts awaiting deletion (see cleanup rules)
 ```
 Script names per stage are listed in `docs/plan.md`.
@@ -39,7 +40,7 @@ Script names per stage are listed in `docs/plan.md`.
 - Raw ReEDS run outputs are never committed. Reference them by path in `00_config/`.
 - Python, in the conda `reeds` environment from `environment.yml` at 0c0ea27, without the
   GAMS packages (`gamsapi`, `gamspy_base`). Scripts read CSV outputs only (D18).
-- Run the pipeline stage by stage, in the order of `docs/plan.md`.
+- Run the pipeline stage by stage, in the order of `docs/plan.md`. Steps: `docs/how_to_run.md`.
 
 ## Cleanup rules for legacy scripts
 - Before deleting anything, record what it did and where that function now lives
@@ -50,7 +51,7 @@ Script names per stage are listed in `docs/plan.md`.
 ## Scenarios
 - Arms, levels, baselines, groups and metrics: `docs/data_dictionary.md`.
 - Run folders: listed in `00_config/` (stage 00a).
-- Decisions D1 to D23: `docs/decisions.md`. Do not change a decision in code; propose a
+- Decisions D1 to D24: `docs/decisions.md`. Do not change a decision in code; propose a
   new decision entry instead.
 - Compare only within an arm, against that arm's own 0 GW case (D2).
 
@@ -62,7 +63,7 @@ Script names per stage are listed in `docs/plan.md`.
 - Convert 2004 USD to 2024 USD (x 1.6563) only in 03_derive.
 
 ## Agent team
-- Five agents with fixed bounds: `docs/plan.md`, "Agent team" (D20 to D23).
+- Five agents with fixed bounds: `docs/plan.md`, "Agent team" (D20 to D23). Files: `.claude/agents/`.
 - Caleb makes every analysis choice and does every merge.
 - The Verifier never reads the Builder's code and sends only results and gaps.
 

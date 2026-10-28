@@ -1,6 +1,6 @@
 # p25 nuclear study: decision log
 
-Twenty-three decisions are settled. Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
+Twenty-four decisions are settled. Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
 
 | ID | Decided | Decision | Source or reason |
 | --- | --- | --- | --- |
@@ -27,6 +27,7 @@ Twenty-three decisions are settled. Citations are for ReEDS commit `0c0ea27`. Do
 | D21 | 2026-10-28 | The Verifier does not see the Builder's code. It sends the Builder only what is different (metric, case, both values, gap), never its method. It reports a relative gap above 1e-4. The Builder has one try to fix each gap; a gap that stays goes to Caleb. | Caleb, 28 Oct. Keeps the check independent. |
 | D22 | 2026-10-28 | The Cost-driver analyst proposes cost-split methods as new decision entries. After Caleb approves one, the Builder writes it as a `04_analyze` script and the Verifier checks it. The analyst only explains outputs. | Caleb, 28 Oct. Only one agent writes pipeline code. |
 | D23 | 2026-10-28 | Keep credit use low: five agents; the analyst and the Explainer start at stage 04; the Verifier checks three sample cases (`med` 0 GW, `med` 3 GW, `txstBA` 2.5 GW); each citation is checked once (`docs/checked_citations.md`); small context per agent; smaller models for the routine checks; one fix round. | Caleb, 28 Oct. |
+| D24 | 2026-10-28 | How to run: one branch per stage from `main` (`stage/<stage>`); agent files in `.claude/agents/`; the Verifier runs in a separate worktree of `main` (`../utnuc-verify`); check reports go to `outputs/checks/<stage>.md`; agent notes go to `notes/`; Caleb passes the Verifier's gap list to the Builder. Steps in `docs/how_to_run.md`. | Caleb, 28 Oct. |
 
 ## On hold
 

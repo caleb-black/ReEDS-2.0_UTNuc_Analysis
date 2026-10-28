@@ -2,7 +2,7 @@
 
 Oct 27, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D23 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D24 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -100,9 +100,9 @@ Five agents do the work. You make every analysis choice and do every merge (D20)
 | Cost-driver analyst | From stage 04: proposes how to split each change in system cost into generation, capacity and transmission parts, and links them to price changes. Explains the results. All reasoning beyond the docs is marked INFERENCE (D22). | Proposed decision entries for you. Notes on results. | Write pipeline scripts. Apply a method that you have not approved. |
 | Explainer | From stage 04: writes the plain-language text for each stage and figure, from the outputs and `docs/data_dictionary.md` only. | Text under each figure; the summary of each stage. | Add a claim that is not in the outputs or the docs. |
 
-**Order of work in each stage**
+**Order of work in each stage** (commands in `docs/how_to_run.md`)
 
-1. The Builder writes the stage scripts and runs them. Each stage writes its check report.
+1. The Builder writes the stage scripts and runs them. Each stage writes its check report to `outputs/checks/<stage>.md` (D24).
 2. The Verifier recomputes the check values for the sample cases: `med` 0 GW, `med` 3 GW, `txstBA` 2.5 GW (D23). The trunk gate script already compares every case.
 3. The Verifier tells the Builder only what is different: the metric, the case, both values and the gap. It reports any relative gap above 1e-4 (D21).
 4. The Builder has one try to fix each gap. If a gap stays, it goes to you with both values. You check the logic.
