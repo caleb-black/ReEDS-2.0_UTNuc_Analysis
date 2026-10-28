@@ -11,9 +11,12 @@ Per case, region r and year t (all blocks of the case, its own numhours, D32):
   0c0ea27, used by `pre_prices` L959-L979, cited in D6): price x quantity,
   summed over the type's own blocks (rep blocks, stress blocks or 'ann').
   allin_dollars = their sum; avg_allin_price = allin_dollars / load_quant (D6).
-- peak_price, ranks 1 to 3: highest `load` price over the case's blocks, with
-  block name `h` and its `numhours` (D9). Ties broken by block name.
-- peak_avg_ratio = peak_price (rank 1) / avg_energy_price (D9).
+- peak_price, ranks 1 to 3: the three highest distinct `load` prices over the
+  case's blocks (D9, D37a). Each row gives n_blocks_at_price, all blocks at
+  that price (h_all, ';'-separated), and h = the first of them by name with
+  its `numhours`.
+- peak_avg_ratio = peak_price (rank 1) / avg_energy_price (D9); left blank
+  (NaN) where avg_energy_price <= 0 (D37b, p19). Other p19 values are kept.
 
 Per case, group (00_config/region_groups.csv, 9 neighbors, D35), block h, year t:
 - group_load_quant = sum of `load` quantity over member regions.
@@ -27,9 +30,12 @@ rows are in the report. Price rows with no quantity row add nothing.
 Dollars (plan rule 6, D8): every dollar or $/MWh value is multiplied by the
 factor in 00_config/study_settings.csv (1.6563) here; column
 `converted_2004_to_2024` = True on those rows. The `load` price is 2004 $/MWh
-(02d units lookup). The units of the res_marg and state_rps prices and
-quantities are "not stated" in the lookup (data dictionary); their dollars
-are computed as D6 says and flagged with unit "not stated" in the table.
+(02d units lookup). Units of each all-in part come from the 02d lookup
+(data dictionary, D37 update): load and oper_res price x MWh and res_marg price
+($/MW per stress timeslice) x MW give 2004 $. Types whose price or quantity
+unit is "not stated" (state_rps, nat_gen) are computed as D6 says and their
+rows keep the unit "not stated"; so does the all-in total if any part has a
+non-zero value with no stated unit.
 
 Check figure: map of avg_energy_price, `ref` 0 GW case of each batch, final
 year (2050), as the bokehpivot "Energy Price Final BA Map" (`reeds2.py`
@@ -64,6 +70,12 @@ SECTION = "03a"
 PRICE_TYPES = ["load", "res_marg", "oper_res", "state_rps", "nat_gen"]  # reeds2.py L34
 MAP_YEAR = 2050                                                          # 'last' solve year
 KEYS = ["type", "subtype", "r", "h", "t"]
+
+
+def type_stated(ty):
+    """True if the 02d lookup states both the price and the quantity unit."""
+    return ("not stated" not in dc.unit_of("reqt_price", ty)
+            and "not stated" not in dc.unit_of("reqt_quant", ty))
 
 
 def per_case(row, groups_b):
@@ -131,27 +143,38 @@ def per_case(row, groups_b):
     add(reg, "load_quant", "load_quant", "MWh", False)
     add(reg, "energy_dollars", "load", "2024 $", True)
     add(reg, "avg_energy_price", "avg_energy", "2024 $/MWh", True)
+    unstated = []
     for ty in PRICE_TYPES:
-        u = "2024 $" if ty == "load" else "not stated (D6 price x quantity; unit not stated)"
+        u = "2024 $" if type_stated(ty) else "not stated (D6 price x quantity; unit not stated)"
+        if not type_stated(ty) and (reg[ty] != 0).any():
+            unstated.append(ty)
         add(reg, f"allin_dollars_{ty}", ty, u, True)
-    add(reg, "allin_dollars", "allin", "not stated (sum of D6 types; non-load units not stated)", True)
-    add(reg, "avg_allin_price", "avg_allin",
-        "not stated (D6 all-in $ / load MWh; non-load units not stated)", True)
+    info["unstated_nonzero"] = ",".join(unstated)
+    # unit per region-year: stated only if every part without a stated unit is 0 there
+    no_unit = [ty for ty in PRICE_TYPES if not type_stated(ty)]
+    nz = (reg[no_unit] != 0).any(axis=1) if no_unit else pd.Series(False, index=reg.index)
+    info["r_t_unstated_nonzero"] = int(nz.sum())
+    lab = "not stated (includes " + "/".join(no_unit) + " dollars, unit not stated)"
+    add(reg, "allin_dollars", "allin", "2024 $", True)
+    out[-1]["unit"] = np.where(nz.to_numpy(), lab, "2024 $")
+    add(reg, "avg_allin_price", "avg_allin", "2024 $/MWh", True)
+    out[-1]["unit"] = np.where(nz.to_numpy(), lab, "2024 $/MWh")
 
     # peaks (D9)
     pk_in = load[["r", "h", "t", "price"]].copy()
     pk_in["case"] = c
-    top, ties = dc.rank_peaks(pk_in, n=3)
-    info["peak_ties_rank1"] = ties
+    top = dc.peak_rows(dc.peak_blocks(pk_in, n=3))
+    info["peak_ties_rank1"] = int((top.loc[top.peak_rank == 1, "n_blocks_at_price"] > 1).sum())
+    info["peak_ranks_lt3"] = int((top.groupby(["r", "t"])["peak_rank"].max() < 3).sum())
     top = top.merge(nh, on="h", how="left")
     info["peak_blocks_without_numhours"] = int(top["numhours"].isna().sum())
     add(top, "peak_price", "price", "2024 $/MWh", True,
-        extra={"peak_rank": top["peak_rank"], "h": top["h"], "numhours": top["numhours"],
-               "n_blocks_at_price": top["n_blocks_at_price"]})
+        extra={"peak_rank": top["peak_rank"], "h": top["h"], "h_all": top["h_all"],
+               "numhours": top["numhours"], "n_blocks_at_price": top["n_blocks_at_price"]})
     r1 = top[top["peak_rank"] == 1][["r", "t", "price"]].merge(
         reg[["r", "t", "avg_energy"]], on=["r", "t"], how="left")
     with np.errstate(divide="ignore", invalid="ignore"):
-        r1["ratio"] = r1["price"] / r1["avg_energy"]
+        r1["ratio"] = np.where(r1["avg_energy"] > 0, r1["price"] / r1["avg_energy"], np.nan)
     info["ratio_avg_le0"] = int((r1["avg_energy"] <= 0).sum())
     add(r1, "peak_avg_ratio", "ratio", "ratio", False)
 
@@ -262,7 +285,7 @@ def main():
               f"({time.time() - t0:.0f} s)", flush=True)
     reg_all = pd.concat(regs, ignore_index=True)
     grp_all = pd.concat(grps, ignore_index=True)
-    for col in ["h"]:
+    for col in ["h", "h_all"]:
         reg_all[col] = reg_all[col].fillna("")
     reg_all["peak_rank"] = reg_all["peak_rank"].fillna(0).astype("int8")
     reg_all["numhours"] = reg_all["numhours"].astype("float64")
@@ -278,7 +301,9 @@ def main():
     n_cases = len(cases)
     exp_blocks = cases["arm"].map(lambda a: 144 if a in ("loadhigh", "loadlow") else 152)
     nan_vals = reg_all[reg_all.metric.isin(["avg_energy_price", "avg_allin_price",
-                                            "peak_price", "peak_avg_ratio"])]["value"]
+                                            "peak_price"])]["value"]
+    ratio_nan = int(reg_all.loc[reg_all.metric == "peak_avg_ratio", "value"].isna().sum())
+    unstated = sorted({t for s_ in info.unstated_nonzero for t in s_.split(",") if t})
     members_ok = all(i["group_members"] == {"focus": 1, "utah_rest": 1, "neighbors": 9,
                                              "rest_wecc": 23, "wecc": 34} for i in infos)
     checks = [
@@ -305,14 +330,20 @@ def main():
          "INFO", f"{int(info.no_price_load.sum())} rows in all cases"),
         ("Negative `load` prices (kept as they are)", "INFO",
          f"{int(info.load_price_lt0.sum())} block rows in all cases"),
-        ("Peak ties at rank 1 (broken by block name; see n_blocks_at_price)", "OPEN" if info.peak_ties_rank1.sum() else "PASS",
-         f"{int(info.peak_ties_rank1.sum())} region-years"),
+        ("Peaks are distinct prices (D37a): region-years whose top price is shared by > 1 block",
+         "INFO", f"{int(info.peak_ties_rank1.sum())} region-years (n_blocks_at_price, h_all)"),
+        ("Region-years with fewer than 3 distinct prices", "INFO",
+         f"{int(info.peak_ranks_lt3.sum())}"),
         ("Peak blocks without a numhours row", "PASS" if info.peak_blocks_without_numhours.sum() == 0 else "FAIL",
          f"{int(info.peak_blocks_without_numhours.sum())}"),
-        ("Region-years with avg energy price <= 0 (ratio not meaningful)",
-         "PASS" if info.ratio_avg_le0.sum() == 0 else "OPEN", f"{int(info.ratio_avg_le0.sum())}"),
-        ("Missing (NaN/inf) price metrics", "PASS" if np.isfinite(nan_vals).all() else "FAIL",
+        ("Region-years with avg energy price <= 0: ratio left blank (D37b)",
+         "PASS" if ratio_nan == int(info.ratio_avg_le0.sum()) else "FAIL",
+         f"{int(info.ratio_avg_le0.sum())} region-years; {ratio_nan} blank ratios"),
+        ("Missing (NaN/inf) average and peak prices", "PASS" if np.isfinite(nan_vals).all() else "FAIL",
          f"{int((~np.isfinite(nan_vals)).sum())} of {len(nan_vals)}"),
+        ("All-in parts with a non-zero value and no stated unit", "PASS" if not unstated else "OPEN",
+         (", ".join(unstated) + f": {int(info.r_t_unstated_nonzero.sum())} region-years; their "
+          "all-in rows keep unit \"not stated\"") if unstated else "none"),
         ("Group members per batch: focus 1, utah_rest 1, neighbors 9, rest_wecc 23, wecc 34 (D35)",
          "PASS" if members_ok else "FAIL", "from 00_config/region_groups.csv"),
         ("Map shapes equal 0c0ea27", "PASS" if not map_err else "FAIL", map_err or "5 files checked"),
@@ -340,7 +371,7 @@ def main():
     peaks_s = reg_all[reg_all.case.isin(dc.SAMPLE_CASES) & (reg_all.r == dc.FOCUS)
                       & reg_all.t.isin(dc.POST_PLANT_YEARS) & (reg_all.metric == "peak_price")]
     peaks_s = peaks_s[["case", "t", "peak_rank", "h", "numhours", "n_blocks_at_price",
-                       "value"]].sort_values(
+                       "h_all", "value"]].sort_values(
         ["case", "t", "peak_rank"])
     gsamp = grp_all[grp_all.case.isin(dc.SAMPLE_CASES) & (grp_all.metric == "group_energy_price")
                     & grp_all.t.isin(dc.POST_PLANT_YEARS)]
@@ -365,11 +396,10 @@ def main():
         "### Checks\n",
         dc.md_table(pd.DataFrame(checks, columns=["check", "result", "detail"])) + "\n",
         "### Requirement types in the all-in price (all cases)\n",
-        "The units of the non-load types are \"not stated\" in the 02d lookup. The all-in price "
-        "is computed as D6 defines it; its unit column says \"not stated\". For Caleb: the "
-        "comments in `report.gms` L330-L331 and L366 at 0c0ea27 say load and operating reserve "
-        "prices are $/MWh, the stress-period reserve margin price is $/MW per stress timeslice, "
-        "and the reserve margin quantity is MW (not yet in the data dictionary).\n",
+        "Units from the 02d lookup (data dictionary, D37 update; `report.gms` L330-L331, L366 at "
+        "0c0ea27). load, oper_res and res_marg give 2004 $; state_rps and nat_gen units are still "
+        "not stated, and their rows keep the unit \"not stated\". The all-in total is labeled "
+        "2024 $ only if no part without a stated unit is non-zero (see the check above).\n",
         dc.md_table(type_tab) + "\n",
         "### Check figure: average energy price map (`ref` 0 GW, 2050)\n",
         "Compare by eye with bokehpivot \"Energy Price Final BA Map ($/MWh)\" "

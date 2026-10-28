@@ -9,7 +9,9 @@ stage 03 (plan rule 2).
   (HDFStore table format, key `data`, D33, D36). ReEDS column names kept.
 - DOLLAR: 2004 USD -> 2024 USD factor (D8), read from 00_config/study_settings.csv.
   Stage 03 is the only place where it is applied (plan rule 6).
-- rank_peaks(): ranks the blocks of each region and year by energy price (D9).
+- peak_blocks(), peak_rows(): the three highest distinct energy prices per region
+  and year and their blocks (D9, D37a).
+- tech_map(), tech_style(): ReEDS technology groups and colors (D37g).
 """
 
 from pathlib import Path
@@ -73,24 +75,70 @@ def read_numhours(where=None):
     return pd.read_hdf(IN_INP / "numhours.h5", "data", where=where)
 
 
-def rank_peaks(price, n=3, keys=("r", "t")):
-    """Top-n blocks by energy price per keys (D9).
+def peak_blocks(price, n=3, keys=("r", "t")):
+    """Blocks at the n highest distinct energy prices per keys (D9, D37a).
 
-    price: rows with columns case, r, h, t, price. Ties are broken by block
-    name (h, ascending) so the result is reproducible; the number of ties at
-    rank 1 is returned for the report, and each row carries
-    n_blocks_at_price (blocks of that region-year with exactly that price).
-    Ranks are over blocks, not distinct prices (open choice for Caleb).
+    price: rows with columns case, r, h, t, price. peak_rank = rank of the
+    block's price among the distinct prices of that region-year (1 = highest);
+    every block at a ranked price is returned. n_blocks_at_price = number of
+    blocks of that region-year at exactly that price.
     """
     keys = ["case", *keys]
-    price = price.copy()
-    price["n_blocks_at_price"] = price.groupby(keys + ["price"])["h"].transform("size")
-    p = price.sort_values(keys + ["price", "h"], ascending=[True] * len(keys) + [False, True])
-    p["peak_rank"] = p.groupby(keys).cumcount() + 1
-    top = p[p["peak_rank"] <= n].copy()
-    mx = price.groupby(keys)["price"].transform("max")
-    ties = int((price[price["price"] == mx].groupby(keys).size() > 1).sum())
-    return top, ties
+    p = price.copy()
+    p["peak_rank"] = (p.groupby(keys)["price"].rank(method="dense", ascending=False)
+                      .astype("int16"))
+    p["n_blocks_at_price"] = p.groupby(keys + ["price"])["h"].transform("size").astype("int16")
+    return p[p["peak_rank"] <= n].sort_values(keys + ["peak_rank", "h"])
+
+
+def peak_rows(blocks, keys=("r", "t")):
+    """One row per ranked price: h = first block by name, h_all = all blocks (';')."""
+    keys = ["case", *keys]
+    g = blocks.sort_values("h").groupby(keys + ["peak_rank"], sort=False)
+    out = g.agg(price=("price", "first"), h=("h", "first"),
+                h_all=("h", lambda s: ";".join(s)),
+                n_blocks_at_price=("n_blocks_at_price", "first")).reset_index()
+    return out
+
+
+def _git_show(path):
+    import subprocess
+    return subprocess.run(["git", "-C", SETTINGS["reeds_source"], "show",
+                           f"{SETTINGS['reeds_commit']}:{path}"],
+                          capture_output=True, check=True).stdout
+
+
+def tech_map():
+    """ReEDS tech_map.csv at 0c0ea27 (D37g), as (compiled regex, display) pairs.
+
+    Applied as bokehpivot does (`reeds_bokeh.py` L414-L431 at 0c0ea27):
+    lowercase value, '^raw$' with '*' -> '.*', first match wins, no match keeps
+    the original name.
+    """
+    import io
+    import re
+    m = pd.read_csv(io.BytesIO(_git_show("postprocessing/bokehpivot/in/reeds2/tech_map.csv")),
+                    comment=None)
+    m = m.dropna(subset=["raw", "display"])
+    m = m[~m["raw"].astype(str).str.startswith("#")]
+    pats = [(re.compile("^" + str(r).replace("*", ".*") + "$"), d)
+            for r, d in zip(m["raw"], m["display"])]
+
+    def f(val):
+        v = str(val).lower()
+        for pat, d in pats:
+            if pat.match(v):
+                return d
+        return val
+    f.matched = lambda val: any(pat.match(str(val).lower()) for pat, _ in pats)
+    return f
+
+
+def tech_style():
+    """ReEDS tech_style.csv at 0c0ea27 (D37g): display -> color, in file order."""
+    import io
+    st = pd.read_csv(io.BytesIO(_git_show("postprocessing/bokehpivot/in/reeds2/tech_style.csv")))
+    return dict(zip(st["order"], st["color"]))
 
 
 def md_table(df, floatfmt="{:,.4g}"):

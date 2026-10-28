@@ -1,13 +1,13 @@
 """03f_line_use: line use in each peak block (D9).
 
-docs/plan.md, stage 03_derive, 03f; D9, D32, D36; data_dictionary.md, Metrics
-("Line at limit in peak block").
+docs/plan.md, stage 03_derive, 03f; D9, D32, D36, D37a, D37d; data_dictionary.md,
+Metrics ("Line at limit in peak block").
 
-Peak blocks: for every region r and year t of a case, the three blocks with
-the highest `load` price (D9), ranked as in 03a (ties broken by block name;
-column n_blocks_at_price). Plan rule 2 forbids reading 03a's output, so the
-ranking is recomputed here from `reqt_price` with the same shared function
-(derive_common.rank_peaks).
+Peak blocks: for every region r and year t of a case, every block at one of
+the three highest distinct `load` prices (D9, D37a; peak_rank 1 to 3, column
+n_blocks_at_price). Plan rule 2 forbids reading 03a's output, so the ranking
+is recomputed here from `reqt_price` with the same shared function
+(derive_common.peak_blocks).
 
 Lines: every `tran_out` row (r, rr, trtype, t) of the case that touches the
 peak region in that year. For each line both directions are listed, as
@@ -19,12 +19,8 @@ denominator is the capacity in that direction. `tran_out` is the average of
 the forward and reverse capacities (`report_calcs.py` L104; report_params.csv
 L223); it is attached as line_capacity_avg_mw for reference only.
 
-A direction with no `tran_util_h_rep` row in that block gets value empty
-(NaN) and in_file = False. Why a row is absent is not covered in the
-documentation; it is not set to 0 here (open item for Caleb).
-
-No "at limit" yes/no flag is made: the threshold is not in
-docs/decisions.md (open item for Caleb). The value is the fraction as stored.
+A direction with no `tran_util_h_rep` row in that block has value 0 (D37d);
+in_file = False marks those rows. at_limit = value >= 0.99 (D37d).
 
 The output covers all 34 regions' peaks, a superset of the data dictionary's
 "per line touching p25"; the p25 rows are the rows with peak_r = p25.
@@ -46,6 +42,7 @@ import pandas as pd
 import derive_common as dc
 
 SECTION = "03f"
+AT_LIMIT = 0.99                                                               # D37d
 
 
 def per_case(row):
@@ -53,7 +50,8 @@ def per_case(row):
     p = dc.read_key("reqt_price", where=f'case == "{c}" & type == "load"',
                     columns=["r", "h", "t", "Value"]).rename(columns={"Value": "price"})
     p["case"] = c
-    top, ties = dc.rank_peaks(p, n=3)
+    top = dc.peak_blocks(p, n=3)
+    ties = int((top.loc[top.peak_rank == 1, "n_blocks_at_price"] > 1).sum())
     top = top.drop(columns="case").rename(columns={"r": "peak_r"})
     nh = dc.read_numhours(where=f'case == "{c}"')[["h", "numhours"]]
     top = top.merge(nh, on="h", how="left")
@@ -75,7 +73,8 @@ def per_case(row):
     lines = lines.merge(tu, on=["r", "rr", "h", "t", "trtype"], how="left", indicator=True)
     lines["in_file"] = lines["_merge"] == "both"
     lines = lines.drop(columns=["_merge", "price"]).rename(columns={"Value": "value"})
-    lines["value"] = lines["value"].astype("float64")
+    lines["value"] = lines["value"].astype("float64").fillna(0.0)          # D37d
+    lines["at_limit"] = lines["value"] >= AT_LIMIT                            # D37d
     lines["metric"] = "line_utilization"
     lines["unit"] = dc.unit_of("tran_util_h_rep")
     lines["converted_2004_to_2024"] = False
@@ -86,7 +85,7 @@ def per_case(row):
             "util_rows_case": len(tu),
             "util_gt1": int((tu["Value"] > 1 + 1e-6).sum()),
             "util_lt0": int((tu["Value"] < -1e-6).sum()),
-            "peaks_without_line": int(len(top) - lines[["peak_r", "t", "peak_rank"]]
+            "peaks_without_line": int(len(top) - lines[["peak_r", "t", "peak_rank", "h"]]
                                       .drop_duplicates().shape[0]),
             "numhours_missing": int(top["numhours"].isna().sum())}
     return lines, info
@@ -104,7 +103,7 @@ def main():
     allt = pd.concat(outs, ignore_index=True)
     cols = dc.CASE_COLS + ["metric", "peak_r", "t", "peak_rank", "h", "numhours",
                            "n_blocks_at_price", "r", "rr", "trtype", "line_capacity_avg_mw",
-                           "value", "in_file", "unit", "converted_2004_to_2024"]
+                           "value", "at_limit", "in_file", "unit", "converted_2004_to_2024"]
     allt = allt[cols]
     allt["line_capacity_avg_mw"] = allt["line_capacity_avg_mw"].astype("float64")
     path = dc.write_long(allt, "line_use_peak", big=True)
@@ -112,27 +111,29 @@ def main():
 
     checks = [
         ("Cases", "PASS" if len(info) == len(cases) else "FAIL", f"{len(info)} of {len(cases)}"),
-        ("Peaks per case = 34 regions x 13 years x 3",
-         "PASS" if (info.peaks == 34 * 13 * 3).all() else "INFO",
+        ("Peak blocks per case (all blocks at the 3 highest distinct prices)", "INFO",
          f"min {info.peaks.min()}, max {info.peaks.max()}"),
         ("Peak blocks without numhours", "PASS" if info.numhours_missing.sum() == 0 else "FAIL",
          str(int(info.numhours_missing.sum()))),
-        ("Peaks with no line in tran_out that year", "INFO", str(int(info.peaks_without_line.sum()))),
-        ("Line directions with no tran_util_h_rep row (value left empty)", "OPEN",
+        ("Peak blocks with no line in tran_out that year (p19 has none)", "INFO",
+         str(int(info.peaks_without_line.sum()))),
+        ("Line directions with no tran_util_h_rep row (value 0, D37d)", "INFO",
          f"{int(info.not_in_file.sum()):,} of {len(allt):,} rows"),
         ("tran_util_h_rep values > 1 or < 0 (all blocks, all cases)",
          "PASS" if info.util_gt1.sum() + info.util_lt0.sum() == 0 else "INFO",
          f"> 1: {int(info.util_gt1.sum())}; < 0: {int(info.util_lt0.sum())}"),
-        ("\"At limit\" yes/no flag", "OPEN", "threshold not in decisions.md; not made"),
+        ("Rows at limit (>= 99 %, D37d)", "INFO", f"{int(allt.at_limit.sum()):,}"),
     ]
     fail = any(c[1] == "FAIL" for c in checks)
     s = allt[allt.case.isin(dc.SAMPLE_CASES) & (allt.peak_r == dc.FOCUS) & (allt.t == 2044)
              & (allt.peak_rank == 1)][["case", "h", "r", "rr", "trtype", "line_capacity_avg_mw",
-                                       "value", "in_file"]].sort_values(["case", "r", "rr"])
+                                       "value", "at_limit", "in_file"]].sort_values(
+                                           ["case", "h", "r", "rr"])
     text = [
-        f"## 03f_line_use — {'FAIL' if fail else 'PASS, with open items'}\n",
-        "Peak blocks: top 3 `load` price blocks per region and year (D9; same ranking as 03a, "
-        "recomputed). Lines: every `tran_out` line touching the peak region, both directions; "
+        f"## 03f_line_use — {'FAIL' if fail else 'PASS'}\n",
+        "Peak blocks: every block at the 3 highest distinct `load` prices per region and year "
+        "(D9, D37a; same ranking as 03a, recomputed). Missing util row = 0; at limit >= 99 % "
+        "(D37d). Lines: every `tran_out` line touching the peak region, both directions; "
         "value = `tran_util_h_rep` in that block (FLOW / directional capacity, `report_calcs.py` "
         "L134). line_capacity_avg_mw = `tran_out` (average of both directions, L104), for "
         "reference. No dollars.\n",
