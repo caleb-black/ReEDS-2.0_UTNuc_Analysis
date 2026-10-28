@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D37 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D38 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -82,11 +82,13 @@ Two questions: what is the prescribed SMR worth to the system, and what does it 
 
 **Proposed analysis (stages 03 and 04)**
 
+**On hold (D38):** 03g and 03h are not built for now; see `docs/decisions.md`, On hold. The text below is kept for when they are taken up.
+
 - **03g\_smr\_value** — For `Nuclear-SMR` in p25, each case and year from 2044: `val_load`, `val_resmarg`, `val_opres`, `val_rps` from `valnew`. Report them per kW-yr and per MWh. Show the value by service as stacked bars by level. If any case builds other nuclear types in p25, show them apart.
 - **03h\_smr\_cost\_gap** — Net value = value minus the SMR's annual cost. INFERENCE: for a forced build, a negative net value is the part the system pays to force it in. Cost side (D19): `lcoe_built` for `Nuclear-SMR` in p25 (`report_params.csv` L116; `report.gms` L264). Net value of energy = value per MWh (`valnew` value / `valnew` MWh) minus `lcoe_built`, as the NVOE in `model_documentation.md` L3333-3354.
 - **03i\_smr\_reduced\_cost** — Not built (D37e): the `INV` reduced cost is absent in every case. Original intent: in each 0 GW case: the `reduced_cost` of `INV` for `Nuclear-SMR` in p25 in 2044. INFERENCE: this is how far, in $/kW, the SMR is from being built by the model's own choice. In the prescribed cases the investment is basic, so its reduced cost is about zero and tells us nothing.
 - **04f\_forcing\_cost\_curve** — A proxy for the dual, from outputs you already have: the change in system cost (D10) per GW between neighboring levels (0 to 0.5, 0.5 to 1, ...). INFERENCE: a shadow price is the change in the objective for one more unit on the right side of the constraint (`model_documentation.md` L3214-3220). The finite difference between levels is the average of that value over the step. Compare it with 03h.
-  - **You check:** one figure per arm with three lines against level: the forcing-cost curve, minus the net value per kW (03h), and the 0 GW reduced cost (03i, one point). If the model is consistent, the three should tell the same story.
+  - **You check:** one figure per arm: the forcing-cost curve against level. (The 03h and 03i lines are dropped for now, D37e and D38.)
 
 ## Agent team
 
