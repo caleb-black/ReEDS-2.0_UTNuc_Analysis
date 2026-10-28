@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D34 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D35 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -12,13 +12,13 @@ Each stage ends with a check that you look at. The next stage starts only after 
 2. **Read only from earlier stages.** A script never reads from a later stage or from its own stage's outputs.
 3. **Data stays long.** Every table between stages has one row per value, with these columns: batch, arm, level, case, region or group, year, metric, sub-key (tech, block, line), value, unit. Wide tables are made only in stage 05 (D11).
 4. **Each stage writes a check report.** A short file with counts, pass or fail for each check, and the path of each check figure. Claude Code shows you this report before it moves on.
-5. **Stop on failure.** A failed gate (setup checks, neighbor list) stops the pipeline. Claude Code reports the failure and waits for you. It does not change the data to make a check pass.
+5. **Stop on failure.** A failed gate (neighbor list, D35) stops the pipeline. Claude Code reports the failure and waits for you. It does not change the data to make a check pass.
 6. **Dollars change only once.** Convert 2004 USD to 2024 USD (factor 1.6563, D8) in stage 03. Earlier stages keep model units.
 7. **No new model claims in code.** If a script needs a fact about ReEDS that `docs/data_dictionary.md` does not have, Claude Code asks you and cites the file and line at `0c0ea27`.
 
 ## Stages 00 to 05
 
-There are six stages. The gates that can stop the work (setup checks, neighbor list) are in stage 02.
+There are six stages. The gate that can stop the work (neighbor list) is in stage 02.
 
 ### 00\_config: write down the study
 
@@ -36,9 +36,9 @@ There are six stages. The gates that can stop the work (setup checks, neighbor l
 ### 02\_clean: prove the runs are fit to use
 
 - **02a\_trunk\_gate** — Not built (D34). Caleb confirmed the branches equal their trunks through 2041.
-- **02b\_setup\_checks** — p25 coal is near zero from 2044. p25 nuclear equals the level in each case. Where the model also builds nuclear on its own, prescribed and endogenous nuclear are shown apart. The 0 GW cases have no new p25 nuclear.
-- **02c\_neighbor\_list** (D7) — In each batch, builds the neighbor list from `tran_out` (that batch's 0 GW `ref`, both columns; D31). Compares it with the expected list (p12, p16, p21, p27, p31, p33, z28). **Stops if they differ.**
-- **02d\_units** — Confirms units per file against `docs/data_dictionary.md`. Confirms all solve years are present. Renames `t` to `year` and `Value` to `value`, and adds the `unit` column (plan rule 3, D33).
+- **02b\_setup\_checks** — Not run as a gate (D35b). Caleb confirmed the setup. Only the check figure below is kept.
+- **02c\_neighbor\_list** (D7, D35a) — In each batch, builds the neighbor list from `tran_out` (that batch's 0 GW `ref`, both columns, any line type; D31). Compares it with the list in D35 (p10, p12, p16, p21, p24, p27, p31, p33, z28). **Stops if they differ.**
+- **02d\_units** (D33, D35c) — Renames `t` to `year` and `Value` to `value`, and adds the `unit` column from `docs/data_dictionary.md` ("not stated" where it has none). No unit check.
   - **You check:** the gate report (pass or fail per case and file), and one plot of p25 capacity by technology over time, one panel per case.
 
 ### 03\_derive: one value per region, year, case
@@ -148,6 +148,7 @@ The working rules from this plan are also in `CLAUDE.md` (source of truth, scena
 - [ ] **On hold (Caleb):** the group-to-group trade table and the cost views A, B, C (see `docs/decisions.md`, On hold). Stage 03c builds only net imports, flows and new lines until this is decided.
 - [x] Decided (D18): Python with the conda `reeds` environment from `environment.yml` at `0c0ea27`, without the GAMS packages (`gamsapi`, `gamspy_base`). Note: reading any GDX file (`gdxpds`) needs the GAMS API. So with no GAMS, the scripts do not read GDX files. Outputs are read from `outputs.h5` with `h5py` (D29).
 - [x] Checked: `inputs/shapefiles/US_PCA/` has shapes for `p28` and `p30`, and none for `z28`. So 05b must merge the two shapes into `z28`.
-- [ ] **Open:** units of `cost_vom`, `heat_rate`, `fuel_price` (check when the files are collected).
+- [x] Done: units of `cost_vom`, `heat_rate`, `fuel_price` are in the data dictionary (`b_inputs.gms` at `0c0ea27`).
+- [ ] **Open (Caleb, later):** branch converter costs before 2044 differ from the trunk (see `docs/decisions.md`, On hold).
 - [x] Decided (27 Oct): Caleb adds the marginal of `eq_forceprescription_power` as an output file when collecting the files. Add a script **03j\_prescription\_dual** that reads it for `Nuclear-SMR` in p25 in 2044. Keep 04f (forcing-cost curve) as a cross-check against it. Columns, units and sign: check when the file arrives.
 - [x] Decided (D19): the SMR net value uses `lcoe_built`. Add `lcoe_built.csv` to the files to collect.

@@ -51,13 +51,13 @@ Script names per stage are listed in `docs/plan.md`.
 ## Scenarios
 - Arms, levels, baselines, groups and metrics: `docs/data_dictionary.md`.
 - Run folders: listed in `00_config/` (stage 00a).
-- Decisions D1 to D34: `docs/decisions.md`. Do not change a decision in code; propose a
+- Decisions D1 to D35: `docs/decisions.md`. Do not change a decision in code; propose a
   new decision entry instead.
 - Compare only within an arm, against that arm's own 0 GW case in the same batch (D2). Never mix UON and UOS (D26).
 
 ## Working rules
 - Follow `docs/plan.md` stage by stage. Stop after each stage and show the check report.
-- A failed gate (setup checks, neighbor list) stops the pipeline. No trunk gate (D34). Report it
+- A failed gate (neighbor list) stops the pipeline. No trunk gate or setup-check gate (D34, D35). Report it
   and wait. Never edit data to make a check pass.
 - Keep tables long between stages. Wide tables only in 05_visualize.
 - Convert 2004 USD to 2024 USD (x 1.6563) only in 03_derive.
