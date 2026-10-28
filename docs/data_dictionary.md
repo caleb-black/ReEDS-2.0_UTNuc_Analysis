@@ -144,15 +144,15 @@ Each output is a key in `<case>/outputs/outputs.h5`, read in the layout of `reed
 | `ret_ivrt` | i, v, r, t | MW | coal retirement check | L160 |
 | `gen_ivrt` | i, v, r, t | MWh | generation | L84 |
 | `gen_h` | i, r, h, t | MW | price-setter test | L85 |
-| `cost_vom` | i, v, r, t (solve years) | Not covered in the documentation | running cost | L255 (input) |
-| `heat_rate` | i, v, r, t (solve years) | Not covered in the documentation | running cost | L263 (input) |
-| `fuel_price` | i, r, t (every year; no `v`) | Not covered in the documentation | running cost | L260 (input) |
+| `cost_vom` | i, v, r, t (solve years) | 2004 $/MWh (`b_inputs.gms` L3463) | running cost | L255 (input) |
+| `heat_rate` | i, v, r, t (solve years) | MMBtu/MWh (`b_inputs.gms` L3623) | running cost | L263 (input) |
+| `fuel_price` | i, r, t (every year; no `v`) | $/MMBtu (`b_inputs.gms` L3681; dollar year not stated) | running cost | L260 (input) |
 | `repgasprice_r` (optional) | r, t | 2004 $/MMBtu | cross-check of the gas price | L148 |
 
 One input file is read as CSV: `<case>/inputs_case/rep/numhours.csv` (h; hours; peak block weight).
 
 Transmission outputs come from `report_calcs.py`. Each line pair is one row, with r before rr in text order (`report_calcs.py` L21-46). Text order is not number order: "p25" comes before "p3". For net flows, a positive value means flow from r to rr (L124).
 
-`report_params.csv` lists `cost_vom`, `heat_rate` and `fuel_price` with no index, unit or description. The columns above are as found in `outputs.h5` (01a, 28 Oct). Their units are not covered in the documentation. `fuel_price` has one value per region and year shared by all techs that burn the same fuel, and no `v` column, so the running-cost join in 03e matches it on i, r, t only. In the file, `gen_h` and `tran_util_h_rep` name the block column `allh`; 01a renames it to `h` (D33).
+`report_params.csv` lists `cost_vom`, `heat_rate` and `fuel_price` with no index, unit or description. The columns above are as found in `outputs.h5` (01a, 28 Oct). Their units are from the parameter declarations in `reeds/core/setup/b_inputs.gms` at `0c0ea27`. The `fuel_price` declaration gives no dollar year; INFERENCE: it is taken as 2004 $, like the rest of the model's money; this is not stated in the source. Running cost = `cost_vom` + `heat_rate` × `fuel_price`, in $/MWh. `fuel_price` has one value per region and year shared by all techs that burn the same fuel, and no `v` column, so the running-cost join in 03e matches it on i, r, t only. In the file, `gen_h` and `tran_util_h_rep` name the block column `allh`; 01a renames it to `h` (D33).
 
 For the SMR value analysis: `valnew` (type, i, r, t; 2004 $, MW, MWh; params L231), `reduced_cost` (i, v, r, t, bin, variable; 2004 $/kW undiscounted; params L144) and `lcoe_built` (i, r, t; $/MWh; params L116) are keys in `outputs.h5`. The marginal of `eq_forceprescription_power` is not in `outputs.h5`; Caleb adds it as a new output (columns and units to check when it arrives).
