@@ -1,8 +1,8 @@
 # p25 nuclear study: implementation plan
 
-Oct 27, 2026 · Caleb
+Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D24 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D31 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -10,7 +10,7 @@ Each stage ends with a check that you look at. The next stage starts only after 
 
 1. **One script, one job.** Name each script with its stage and order, for example `02_clean/02a_trunk_gate`.
 2. **Read only from earlier stages.** A script never reads from a later stage or from its own stage's outputs.
-3. **Data stays long.** Every table between stages has one row per value, with these columns: arm, level, case, region or group, year, metric, sub-key (tech, block, line), value, unit. Wide tables are made only in stage 05 (D11).
+3. **Data stays long.** Every table between stages has one row per value, with these columns: batch, arm, level, case, region or group, year, metric, sub-key (tech, block, line), value, unit. Wide tables are made only in stage 05 (D11).
 4. **Each stage writes a check report.** A short file with counts, pass or fail for each check, and the path of each check figure. Claude Code shows you this report before it moves on.
 5. **Stop on failure.** A failed gate (D4, setup checks, neighbor list) stops the pipeline. Claude Code reports the failure and waits for you. It does not change the data to make a check pass.
 6. **Dollars change only once.** Convert 2004 USD to 2024 USD (factor 1.6563, D8) in stage 03. Earlier stages keep model units.
@@ -22,22 +22,22 @@ There are six stages. The two gates that can stop the work are in stage 02.
 
 ### 00\_config: write down the study
 
-- **00a\_study** — Lists every case: folder name, arm, level, batch, path to `runs/<case>/outputs/`. Also lists the groups, the 34 zones, report years, dollar factor.
-  - In: your run folder (path set once). Out: `study_cases` and `region_groups` tables.
-  - **You check:** one table of all cases. Each arm has the levels in the arm table of `docs/data_dictionary.md`. No case is missing.
+- **00a\_study** — Lists every case of UON and UOS (D25, D27): folder name, batch, arm, level, path to `<case>/outputs/outputs.h5`. Records the setup switches of every case from `inputs_case/switches.csv` (D30), the ReEDS source path and HEAD. Also lists the groups, the 34 zones, report years, dollar factor.
+  - In: `D:\ReEDS\runs` (path set once). Out: `study_cases`, `case_switches` and `region_groups` tables.
+  - **You check:** one table of all cases. Each batch and arm has the levels in the arm tables of `docs/data_dictionary.md`. No case is missing. Each case has `outputs/outputs.h5`. Setup switches match the data dictionary, except the arm switch.
 
 ### 01\_ingest: copy raw files, change nothing
 
-- **01a\_load\_outputs** — Reads each file in "Files to collect" for every case. Renames the `*` columns by position (type, subtype, r, h, t). Adds arm, level, case.
-- **01b\_load\_inputs** — Reads `numhours.csv`, `cost_vom`, `heat_rate`, `fuel_price` for every case.
-  - Out: one long table per source file.
+- **01a\_load\_outputs** — Reads each key in "Outputs read from each run" from `outputs.h5` for every case (D29). Renames the `*` columns by position (type, subtype, r, h, t). Adds batch, arm, level, case. Lists absent keys (an absent key is an empty table).
+- **01b\_load\_inputs** — Reads `inputs_case/rep/numhours.csv` for every case. (`cost_vom`, `heat_rate`, `fuel_price` are `outputs.h5` keys, read in 01a.)
+  - Out: one long table per output key, with UON and UOS rows kept apart by `batch` (D26).
   - **You check:** row count per case per file. Cases of one arm have similar counts. A missing file is listed by name.
 
 ### 02\_clean: prove the runs are fit to use
 
-- **02a\_trunk\_gate** (D4) — Each branch equals its trunk for every year up to 2041, in every file. `nuccons` 0.5 GW equals `med` 0.5 GW. `c66BA` equals `med` (D5). **Stops on failure.**
-- **02b\_setup\_checks** — p25 coal is near zero from 2044. p25 nuclear equals the level in each case. `gashiBA`: prescribed and endogenous nuclear are shown apart. The 0 GW cases have no new p25 nuclear.
-- **02c\_neighbor\_list** (D7) — Builds the neighbor list from `tran_out` (0 GW `med`, both columns). Compares it with the expected list (p12, p16, p21, p27, p31, p33, z28). **Stops if they differ.**
+- **02a\_trunk\_gate** (D4) — (D28) Within each batch, each branch equals its trunk (0.5 GW case of the same arm) for every year up to 2041, in every output. **Stops on failure.**
+- **02b\_setup\_checks** — p25 coal is near zero from 2044. p25 nuclear equals the level in each case. Where the model also builds nuclear on its own, prescribed and endogenous nuclear are shown apart. The 0 GW cases have no new p25 nuclear.
+- **02c\_neighbor\_list** (D7) — In each batch, builds the neighbor list from `tran_out` (that batch's 0 GW `ref`, both columns; D31). Compares it with the expected list (p12, p16, p21, p27, p31, p33, z28). **Stops if they differ.**
 - **02d\_units** — Confirms units per file against `docs/data_dictionary.md`. Confirms all solve years are present.
   - **You check:** the gate report (pass or fail per case and file), and one plot of p25 capacity by technology over time, one panel per case.
 
@@ -49,23 +49,23 @@ There are six stages. The two gates that can stop the work are in stage 02.
 - **03d\_capacity\_generation** — Capacity and generation by technology, with share of the regional total.
 - **03e\_price\_setter** (D12) — Per block: highest running cost of the techs that run; gap to the price; price-setter or "set by something else".
 - **03f\_line\_use** (D9) — Line use in each peak block, from `tran_util_h_rep`.
-  - **You check:** a map of average price for the 0 GW `med` case. Compare it by eye with the bokehpivot "Energy Price Final BA Map" of the same run. Also the plot of all price gaps from 03e.
+  - **You check:** a map of average price for the 0 GW `ref` case of each batch. Compare it by eye with the bokehpivot "Energy Price Final BA Map" of the same run. Also the plot of all price gaps from 03e.
 
 ### 04\_analyze: groups and differences
 
 - **04a\_groups** — Aggregates every metric to the five groups, with the rule in the metrics table of `docs/data_dictionary.md`.
-- **04b\_diff** (D2, D11) — Diff (and % where D11 says) against the arm's own 0 GW case.
+- **04b\_diff** (D2, D11) — Diff (and % where D11 says) against the arm's own 0 GW case in the same batch.
 - **04c\_slopes** (D3) — Slopes on the shared levels only.
 - **04d\_peak\_drilldown** (D14) — For each group peak block: one row per member region.
 - **04e\_neighbor\_table** — Price change for each neighbor of p25 (sanity check).
-  - **You check:** Diff against level, one line per group, one panel per arm. Every value before 2044 is zero. Changes are smooth and mostly in one direction; anything else gets a written note.
+  - **You check:** Diff against level, one line per group, one panel per arm, one figure per batch (D26). Every value before 2044 is zero. Changes are smooth and mostly in one direction; anything else gets a written note.
 
 ### 05\_visualize: final figures and tables
 
 - **05a\_group\_figures** — Primary results per group: price, peak, ratio, cost.
 - **05b\_region\_maps** (D15) — Maps of average price, Diff in price, Diff in system cost; `expenditure_flow` map next to the cost map. Shapes from `inputs/shapefiles/US_PCA/` (merge p28 and p30 into z28).
 - **05c\_price\_setter\_figures** — Share of blocks per price-setter type, by level.
-- **05d\_wide\_tables** — One wide CSV per metric: arm, region or group, year, value per level, Diff per level.
+- **05d\_wide\_tables** — One wide CSV per metric and batch: arm, region or group, year, value per level, Diff per level.
   - **You check:** each figure has a one-line statement under it that you agree with.
 
 ## SMR value and the cost of prescribing it
@@ -82,7 +82,7 @@ Two questions: what is the prescribed SMR worth to the system, and what does it 
 
 **Proposed analysis (stages 03 and 04)**
 
-- **03g\_smr\_value** — For `Nuclear-SMR` in p25, each case and year from 2044: `val_load`, `val_resmarg`, `val_opres`, `val_rps` from `valnew`. Report them per kW-yr and per MWh. Show the value by service as stacked bars by level. Add the conventional `Nuclear` for `nuccons`.
+- **03g\_smr\_value** — For `Nuclear-SMR` in p25, each case and year from 2044: `val_load`, `val_resmarg`, `val_opres`, `val_rps` from `valnew`. Report them per kW-yr and per MWh. Show the value by service as stacked bars by level. If any case builds other nuclear types in p25, show them apart.
 - **03h\_smr\_cost\_gap** — Net value = value minus the SMR's annual cost. INFERENCE: for a forced build, a negative net value is the part the system pays to force it in. Cost side (D19): `lcoe_built` for `Nuclear-SMR` in p25 (`report_params.csv` L116; `report.gms` L264). Net value of energy = value per MWh (`valnew` value / `valnew` MWh) minus `lcoe_built`, as the NVOE in `model_documentation.md` L3333-3354.
 - **03i\_smr\_reduced\_cost** — In each 0 GW case: the `reduced_cost` of `INV` for `Nuclear-SMR` in p25 in 2044. INFERENCE: this is how far, in $/kW, the SMR is from being built by the model's own choice. In the prescribed cases the investment is basic, so its reduced cost is about zero and tells us nothing.
 - **04f\_forcing\_cost\_curve** — A proxy for the dual, from outputs you already have: the change in system cost (D10) per GW between neighboring levels (0 to 0.5, 0.5 to 1, ...). INFERENCE: a shadow price is the change in the objective for one more unit on the right side of the constraint (`model_documentation.md` L3214-3220). The finite difference between levels is the average of that value over the step. Compare it with 03h.
@@ -95,7 +95,7 @@ Five agents do the work. You make every analysis choice and do every merge (D20)
 | Agent | Does | May write | May not |
 | --- | --- | --- | --- |
 | Builder | Writes the scripts for one stage, on that stage's branch, as this plan says. Fixes what the Verifier and the Reviewer report. | Scripts in `00_config/` to `05_visualize/`. | Edit `docs/`. Make an analysis choice that is not in `docs/decisions.md`. |
-| Verifier | Recomputes the check values from the raw CSV files with its own calculation. Does not read the Builder's code (D21). | Its own check files, outside the pipeline. | Read the Builder's scripts. Send its method to the Builder. |
+| Verifier | Recomputes the check values from the raw run outputs (`outputs.h5`) with its own calculation. Does not read the Builder's code (D21). | Its own check files, outside the pipeline. | Read the Builder's scripts. Send its method to the Builder. |
 | Reviewer | Checks each PR against this plan, `CLAUDE.md` and `docs/decisions.md`. Checks each new model claim against a file and line at `0c0ea27`, or marks it "Not covered in the documentation". | Review comments. New rows in `docs/checked_citations.md`. | Merge. Change scripts. |
 | Cost-driver analyst | From stage 04: proposes how to split each change in system cost into generation, capacity and transmission parts, and links them to price changes. Explains the results. All reasoning beyond the docs is marked INFERENCE (D22). | Proposed decision entries for you. Notes on results. | Write pipeline scripts. Apply a method that you have not approved. |
 | Explainer | From stage 04: writes the plain-language text for each stage and figure, from the outputs and `docs/data_dictionary.md` only. | Text under each figure; the summary of each stage. | Add a claim that is not in the outputs or the docs. |
@@ -103,7 +103,7 @@ Five agents do the work. You make every analysis choice and do every merge (D20)
 **Order of work in each stage** (commands in `docs/how_to_run.md`)
 
 1. The Builder writes the stage scripts and runs them. Each stage writes its check report to `outputs/checks/<stage>.md` (D24).
-2. The Verifier recomputes the check values for the sample cases: `med` 0 GW, `med` 3 GW, `txstBA` 2.5 GW (D23). The trunk gate script already compares every case.
+2. The Verifier recomputes the check values for the sample cases: UON `ref` 0 GW, UON `ref` 3 GW, UOS `ref` 2.5 GW (D23, D31). The trunk gate script already compares every case.
 3. The Verifier tells the Builder only what is different: the metric, the case, both values and the gap. It reports any relative gap above 1e-4 (D21).
 4. The Builder has one try to fix each gap. If a gap stays, it goes to you with both values. You check the logic.
 5. The Reviewer checks the PR. A failed check blocks the PR.
@@ -145,7 +145,7 @@ The working rules from this plan are also in `CLAUDE.md` (source of truth, scena
 ## On hold and open items
 
 - [ ] **On hold (Caleb):** the group-to-group trade table and the cost views A, B, C (see `docs/decisions.md`, On hold). Stage 03c builds only net imports, flows and new lines until this is decided.
-- [x] Decided (D18): Python with the conda `reeds` environment from `environment.yml` at `0c0ea27`, without the GAMS packages (`gamsapi`, `gamspy_base`). Note: reading any GDX file (`gdxpds`) needs the GAMS API. So with no GAMS, the scripts read CSV outputs only.
+- [x] Decided (D18): Python with the conda `reeds` environment from `environment.yml` at `0c0ea27`, without the GAMS packages (`gamsapi`, `gamspy_base`). Note: reading any GDX file (`gdxpds`) needs the GAMS API. So with no GAMS, the scripts do not read GDX files. Outputs are read from `outputs.h5` with `h5py` (D29).
 - [x] Checked: `inputs/shapefiles/US_PCA/` has shapes for `p28` and `p30`, and none for `z28`. So 05b must merge the two shapes into `z28`.
 - [ ] **Open:** units of `cost_vom`, `heat_rate`, `fuel_price` (check when the files are collected).
 - [x] Decided (27 Oct): Caleb adds the marginal of `eq_forceprescription_power` as an output file when collecting the files. Add a script **03j\_prescription\_dual** that reads it for `Nuclear-SMR` in p25 in 2044. Keep 04f (forcing-cost curve) as a cross-check against it. Columns, units and sign: check when the file arrives.

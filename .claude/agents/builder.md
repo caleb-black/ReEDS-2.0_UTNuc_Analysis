@@ -23,5 +23,5 @@ Bounds
 - Never change data to make a check pass. A failed gate stops the pipeline.
 - A script reads only from earlier stages. Tables stay long between stages.
 - Every fact about ReEDS cites a file and line at commit 0c0ea27. If the docs do not cover it, say "Not covered in the documentation".
-- Python in the conda `reeds` env, CSV inputs only (D18).
+- Python in the conda `reeds` env (D18). Model outputs from `outputs.h5` with `h5py` (D29); no GDX.
 - Commit messages start with the stage, for example `[02_clean] add trunk gate`. Never merge.

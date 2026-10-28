@@ -7,8 +7,8 @@ You do three things in each stage. You start each agent. You pass the Verifier's
 ## 1. One-time setup
 
 1. Clone this repo, for example to `C:\Users\caleb\ReEDS-2.0_UTNuc_Analysis`.
-2. Have a local copy of the ReEDS source at commit `0c0ea27`. The Reviewer reads it to check citations.
-3. Activate the conda `reeds` env (D18): `conda activate reeds`.
+2. The ReEDS source is at `C:\Users\caleb\ReEDS` (HEAD is later than `0c0ea27`). The Reviewer checks citations with `git show 0c0ea27:<path>` there (D30).
+3. Activate the conda `reeds` env (D18): `conda activate reeds`. To build it: take `environment.yml` at `0c0ea27` (`git show 0c0ea27:environment.yml`), keep the required conda packages, drop the optional block and the whole `pip:` block (`gamsapi`, `gdxpds`, `gamspy_base` need GAMS; `pulp` is not used), add `ipykernel=7.3`, then `conda env create -f <that file>`. Built 28 Oct: Python 3.14.10, pandas 3.0.6, h5py 3.16.0.
 4. Make the Verifier's folder. This is a second copy of the repo on `main`, next to the first one:
 
    ```
@@ -16,7 +16,7 @@ You do three things in each stage. You start each agent. You pass the Verifier's
    ```
 
    That copy never contains a stage branch, so the Verifier cannot read the Builder's scripts (D21).
-5. Keep the raw run folders outside the repo. In stage 00 you give the Builder their path and the ReEDS source path. It writes them in `00_config/`.
+5. Keep the raw run folders outside the repo. They are in `D:\ReEDS\runs` (D25). In stage 00 the Builder writes that path and the ReEDS source path in `00_config/`.
 
 The agent files are in `.claude/agents/`. Claude Code finds them on its own when you start `claude` in either folder.
 

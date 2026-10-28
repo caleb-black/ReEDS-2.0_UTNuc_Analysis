@@ -39,7 +39,7 @@ Script names per stage are listed in `docs/plan.md`.
 - One script, one job. No script reaches backward into a later stage.
 - Raw ReEDS run outputs are never committed. Reference them by path in `00_config/`.
 - Python, in the conda `reeds` environment from `environment.yml` at 0c0ea27, without the
-  GAMS packages (`gamsapi`, `gamspy_base`). Scripts read CSV outputs only (D18).
+  GAMS packages (`gamsapi`, `gamspy_base`). Scripts read `outputs.h5` with `h5py`, no GDX (D18, D29).
 - Run the pipeline stage by stage, in the order of `docs/plan.md`. Steps: `docs/how_to_run.md`.
 
 ## Cleanup rules for legacy scripts
@@ -51,9 +51,9 @@ Script names per stage are listed in `docs/plan.md`.
 ## Scenarios
 - Arms, levels, baselines, groups and metrics: `docs/data_dictionary.md`.
 - Run folders: listed in `00_config/` (stage 00a).
-- Decisions D1 to D24: `docs/decisions.md`. Do not change a decision in code; propose a
+- Decisions D1 to D31: `docs/decisions.md`. Do not change a decision in code; propose a
   new decision entry instead.
-- Compare only within an arm, against that arm's own 0 GW case (D2).
+- Compare only within an arm, against that arm's own 0 GW case in the same batch (D2). Never mix UON and UOS (D26).
 
 ## Working rules
 - Follow `docs/plan.md` stage by stage. Stop after each stage and show the check report.

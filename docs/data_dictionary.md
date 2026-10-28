@@ -1,12 +1,23 @@
 # p25 nuclear study: data dictionary
 
-Oct 27, 2026 · Caleb
+Oct 28, 2026 · Caleb
 
 This is the single place for the names, terms and files of the study. Decisions are in `docs/decisions.md`. All model citations are for ReEDS commit `0c0ea27` in `ReEDS-Model/ReEDS` (5 Aug 2026). The report code is now in `reeds/core/terminus/`: `report.gms`, `report_params.csv`, and `report_calcs.py` (transmission outputs).
 
-## Model setup (0c0ea27 runs)
+## Runs and batches (D25, D26)
 
-These settings are the same for every case. Only the arm switches in "Arms and their baselines" change.
+Run folders are in `D:\ReEDS\runs` (path set in `00_config/`). Each case reads its outputs from `<case>/outputs/outputs.h5` (D29) and its inputs from `<case>/inputs_case/`.
+
+| Batch | Folder prefix | Upgrades | Arms used |
+| --- | --- | --- | --- |
+| UON | `UON_20261022_` | off (`GSw_Upgrades` 0) | `ref`, `gaslow`, `loadhigh`, `loadlow`, `pvadv`, `smrcons` |
+| UOS | `UOS_20261021_` | on (`GSw_Upgrades` 1) | `ref`, `loadhigh`, `loadlow` (D27) |
+
+UON and UOS are two separate studies (D26). No table, figure or note mixes them. `UOC_20261021_*` runs are not used.
+
+## Model setup
+
+These settings are the same for every case in both batches, except `GSw_Upgrades`. Only the arm switches in "Arms and their baselines" change. Values are read from `UON_20261022_0G_ref` and `UOS_20261021_0G_ref` (`inputs_case/switches.csv`); 00a records them for every case (D30).
 
 | Switch | Value | Meaning, from `cases.csv` at `0c0ea27` |
 | --- | --- | --- |
@@ -14,8 +25,10 @@ These settings are the same for every case. Only the arm switches in "Arms and t
 | `GSw_ZoneSet` | `z132` | Zone set z132 (L49). In the west it has 34 zones. `p28` and `p30` are merged into one zone, `z28` (Arizona). `p25` and `p26` are unchanged (`inputs/zones/z132/hierarchy.csv`). |
 | `GSw_GasCurve` | 2 | Static gas supply curve (L142). |
 | `GSw_Clean_Air_Act` | 0 | Clean Air Act Section 111 provisions off (L107). |
-| `GSw_Upgrades` | 0 | Upgrades off (L348). |
-| `demandscen` | EER scenarios (per arm) | Load scenario (L32). |
+| `GSw_Upgrades` | 0 in UON, 1 in UOS | Upgrades off or on (L348). |
+| `GSw_ForcePrescription` | 1 | Forced prescriptions on (L139). |
+| `demandscen` | `AEO_2026_baseline` | Demand scenario (L32). Same in every arm. |
+| `GSw_LoadProfiles` | `EER2025_IRAlow` in `ref` | Demand profile (L214). The load arms change this switch. |
 | `GSw_PRM_CapCredit` | 0 (default) | Stress-period reserve margin (L259). Your `res_marg` rows use stress blocks, which matches this. |
 
 The old switches `GSw_OPGW`, `GSw_NoReinforcement` and `GSw_RegionResolution` do not exist at `0c0ea27`.
@@ -28,7 +41,7 @@ Every region belongs to exactly one of the first four groups. `wecc` is the sum 
 | --- | --- | --- |
 | `focus` | p25 | Fixed. The nuclear plant is here. |
 | `utah_rest` | p26 | Fixed. The other half of Utah. |
-| `neighbors` | Zones directly connected to p25, without p26 | From `tran_out` in the 0 GW `med` case. Read both the `r` and `rr` columns. The list is fixed for all cases. Expected from the z132 interface list: p12, p16, p21, p27, p31, p33, z28 (`inputs/zones/z132/interfaces_r.csv`). If `tran_out` gives a different list, stop and check. |
+| `neighbors` | Zones directly connected to p25, without p26 | From `tran_out` in the batch's own 0 GW `ref` case (D31). Read both the `r` and `rr` columns. The list is fixed for all cases of that batch. Expected from the z132 interface list: p12, p16, p21, p27, p31, p33, z28 (`inputs/zones/z132/interfaces_r.csv`). If `tran_out` gives a different list, stop and check. |
 | `rest_wecc` | All other western zones | The 34 western zones of z132, minus the three groups above. |
 | `wecc` | All 34 western zones | The whole system. |
 
@@ -36,17 +49,18 @@ Every region belongs to exactly one of the first four groups. `wecc` is the sum 
 
 | Term | Meaning |
 | --- | --- |
-| Arm | A set of cases that share all assumptions except the nuclear level. Example: `med`. |
-| Level | GW of nuclear prescribed in p25 from 2044: 0, 0.5, 1, 1.5, 2, 2.5 or 3. In folder names, `p` is the decimal point (`1p5G` = 1.5 GW). |
-| Case | One run: one arm at one level. Folder name = `<batch>_<date>_<level>_<arm>`. |
-| Trunk | The 0.5 GW case of an arm. A full run from 2010. |
+| Batch | A set of runs with one upgrades setting: UON (off) or UOS (on). The two batches are separate studies (D26). |
+| Arm | A set of cases in one batch that share all assumptions except the nuclear level. Example: `ref`. |
+| Level | GW of nuclear prescribed in p25 from 2044. UON: 0 to 3 in steps of 0.25. UOS: 0 to 3 in steps of 0.5. In folder names, `p` is the decimal point (`1p5G` = 1.5 GW). |
+| Case | One run: one arm at one level in one batch. Folder name = `<batch>_<date>_<level>_<arm>`, for example `UON_20261022_2p5G_ref`. |
+| Trunk | The 0.5 GW case of an arm, in the same batch. A full run from 2010. |
 | Branch | Any other level. A copy of the trunk restarted at 2044 with a different nuclear size. |
-| Trunk gate | The check that every branch equals its trunk through 2041, in every file (D4). |
+| Trunk gate | The check that every branch equals its trunk through 2041, in every output (D4, D28). |
 | Shared levels | 0, 0.5, 1.5, 2.5 GW. Used for slopes that compare arms (D3). |
 | Solve year | A year the model solves: 2010, 2015, 2020, 2023, then every 3 years to 2050. Post-plant years are 2044, 2047, 2050. |
 | Block | One representative 3-hour period (152 per year, names `y2012dDDDhHHH`). Its weight in hours is in `numhours.csv`. |
 | Stress block | A period chosen by the adequacy loop, used for the reserve margin (names `sy<year>dDDDhHHH`). Not used for energy prices. |
-| Diff | Case value minus the value of the arm's own 0 GW case, same region or group and year (D2). |
+| Diff | Case value minus the value of the arm's own 0 GW case in the same batch, same region or group and year (D2, D27). |
 | Relative Diff | Diff divided by the 0 GW value, in %. Used only for the metrics named in D11. |
 | Energy price | The `load` price from `reqt_price`, in $/MWh per block. |
 | All-in price | Energy price plus reserve margin, operating reserve, and policy prices, all divided by `load` quantity (D6). |
@@ -59,18 +73,28 @@ Every region belongs to exactly one of the first four groups. `wecc` is the sum 
 
 ## Arms and their baselines
 
-Seven arms are used in results. `c66BA` is only a reproducibility check (D5).
+Every arm uses its own 0 GW case in the same batch as baseline (D2, D27). Switch values are from `inputs_case/switches.csv` of the 0.5 GW cases in UON; line numbers are for `cases.csv` at `0c0ea27`.
 
-| Arm | Levels (GW) | Only difference from `med` | Baseline (0 GW case) | Notes |
-| --- | --- | --- | --- | --- |
-| `med` | 0, 0.5, 1, 1.5, 2, 2.5, 3 | None (reference) | Its own | Plant is `Nuclear-SMR`. |
-| `high` | 0, 0.5, 1, 1.5, 2, 2.5, 3 | High load growth | Its own | Different representative hours; compare peaks only as ratios. |
-| `nuccons` | 0.5, 1, 1.5, 2, 2.5, 3 | Conservative nuclear cost | `CBBA_20261006_0G_med`, if the gate in D4 passes | Builds conventional `Nuclear`, not SMR. Label it that way. |
-| `lowBA` | 0, 0.5, 1.5, 2.5 | Low load growth | Its own | Different representative hours. |
-| `no13BA` | 0, 0.5, 1.5, 2.5 | No stress periods from 2013 | Its own |  |
-| `txstBA` | 0, 0.5, 1.5, 2.5 | No new interstate transmission | Its own |  |
-| `gashiBA` | 0, 0.5 | High gas price | Its own | Builds endogenous `Nuclear-Stor1`. Show as one point, not a slope. |
-| `c66BA` | 0, 0.5 | 66 clusters asked (gives 19, same as `med`) | Not used in results | Must equal `med`. |
+**UON (upgrades off): 6 arms, 78 cases**
+
+| Arm | Levels (GW) | Only difference from `ref` | Notes |
+| --- | --- | --- | --- |
+| `ref` | 0 to 3, step 0.25 | None (reference). Medium load: `GSw_LoadProfiles` = `EER2025_IRAlow` | Plant is `Nuclear-SMR`. |
+| `gaslow` | 0 to 3, step 0.25 | `ngscen` = `AEO_2026_HOG` (L39) |  |
+| `loadhigh` | 0 to 3, step 0.25 | `GSw_LoadProfiles` = `EER2025_100by2050` (L214) |  |
+| `loadlow` | 0 to 3, step 0.25 | `GSw_LoadProfiles` = `EER2025_Baseline_AEO2023` (L214) |  |
+| `pvadv` | 0 to 3, step 0.25 | `plantchar_upv` = `upv_ATB_2024_advanced` (L28) |  |
+| `smrcons` | 0 to 3, step 0.25 | `plantchar_nuclear_smr` = `nuclear-smr_ATB_2024_conservative` (L23) |  |
+
+**UOS (upgrades on): 3 arms, 21 cases**
+
+| Arm | Levels (GW) | Only difference from UOS `ref` | Notes |
+| --- | --- | --- | --- |
+| `ref` | 0 to 3, step 0.5 | None (reference) | |
+| `loadhigh` | 0 to 3, step 0.5 | As in UON | |
+| `loadlow` | 0 to 3, step 0.5 | As in UON | |
+
+Not used (D27): UON `gashigh` (`ngscen` = `AEO_2026_LOG`, L39; 0, 0.5, 1.5, 2.5 GW), because the model builds nuclear there on its own; and UOS `gashigh`, `gaslow`, `pvadv` and `smrcons` (0.5, 1.5, 2.5 GW), because they have no 0 GW case. Whether the load arms change the representative hours is not yet checked; 01a can compare `numhours.csv` across arms.
 
 ## Metrics
 
@@ -97,35 +121,36 @@ Average price, peak price and system cost are the primary results. The rest expl
 
 **Caution for the system cost map.** INFERENCE: `systemcost_ba_bulk_ew` puts a cost in the region where the plant or line is. It does not say who pays. So p25 will show a large cost rise, and its neighbors can show a fall, even when they buy the power. Show the `expenditure_flow` map next to it, so that the reader sees where the money goes.
 
-## Files to collect from each run
+## Outputs read from each run
 
-You already have the files marked "have". Collect the files marked "get" for all runs. Row numbers are for `reeds/core/terminus/report_params.csv` at `0c0ea27`.
+Each output is a key in `<case>/outputs/outputs.h5`, read in the layout of `reeds/io.py` `read_h5` (D29). A key that is absent means an empty table. All keys below are present in `UON_20261022_0G_ref` (checked 28 Oct); 01a lists any key missing in other cases. In the file, the unnamed columns are `*`, `*.1`, `*.2`; 01a renames them by position to the names below. Row numbers are for `reeds/core/terminus/report_params.csv` at `0c0ea27`.
 
-| File | Status | Columns | Unit | Used for | Params row |
-| --- | --- | --- | --- | --- | --- |
-| `reqt_price.csv` | have | type, subtype, r, h, t | load: 2004 $/MWh | prices | L154 |
-| `reqt_quant.csv` | have | type, subtype, r, h, t | load: MWh per block | prices (weights) | L156 |
-| `inputs_case/rep/numhours.csv` | have | h | hours | peak block weight | input file |
-| `systemcost_ba_bulk_ew.csv` | get | sys\_costs, r, t | 2004 $ | system cost | L190 |
-| `net_import_ann_rep.csv` | have | r, t | MWh | net imports | L209 |
-| `net_import_ann_stress.csv` | get (optional) | r, t | MWh | net imports in stress periods, check only | L210 |
-| `expenditure_flow.csv` | have | type, r, rr, t | 2004 $ | trade money, cost view B | L77 |
-| `expenditure_flow_rps.csv`, `expenditure_flow_int.csv` | get | st, ast, t / r, t | 2004 $ | cost view B | L78, L79 |
-| `tran_out.csv` | have | r, rr, trtype, t | MW | neighbor list, line capacity | L223 |
-| `invtran_out.csv` | get | r, rr, trtype, t | MW | new lines | L114 |
-| `tran_util_h_rep.csv` | get | r, rr, h, trtype, t | fraction of capacity, per direction | line at limit in peak block | L203 |
-| `tran_flow_rep_ann.csv` | get | r, rr, trtype, t | MWh, net, signed | trade energy | L201 |
-| `cap_ivrt.csv` | have | i, v, r, t | MW | capacity, setup checks | L19 |
-| `ret_ivrt.csv` | have | i, v, r, t | MW | coal retirement check | L160 |
-| `gen_ivrt.csv` | have | i, v, r, t | MWh | generation | L84 |
-| `gen_h.csv` | get | i, r, h, t | MW | price-setter test | L85 |
-| `cost_vom.csv` | get | per the input file | check | running cost | L255 (input) |
-| `heat_rate.csv` | get | per the input file | check | running cost | L263 (input) |
-| `fuel_price.csv` | get | per the input file | check | running cost | L260 (input) |
-| `repgasprice_r.csv` | get (optional) | r, t | 2004 $/MMBtu | cross-check of the gas price | L148 |
+| Key | Columns | Unit | Used for | Params row |
+| --- | --- | --- | --- | --- |
+| `reqt_price` | type, subtype, r, h, t | load: 2004 $/MWh | prices | L154 |
+| `reqt_quant` | type, subtype, r, h, t | load: MWh per block | prices (weights) | L156 |
+| `systemcost_ba_bulk_ew` | sys\_costs, r, t | 2004 $ | system cost | L190 |
+| `net_import_ann_rep` | r, t | MWh | net imports | L209 |
+| `net_import_ann_stress` (optional) | r, t | MWh | net imports in stress periods, check only | L210 |
+| `expenditure_flow` | type, r, rr, t | 2004 $ | trade money, cost view B | L77 |
+| `expenditure_flow_rps`, `expenditure_flow_int` | st, ast, t / r, t | 2004 $ | cost view B | L78, L79 |
+| `tran_out` | r, rr, trtype, t | MW | neighbor list, line capacity | L223 |
+| `invtran_out` | r, rr, trtype, t | MW | new lines | L114 |
+| `tran_util_h_rep` | r, rr, h, trtype, t | fraction of capacity, per direction | line at limit in peak block | L203 |
+| `tran_flow_rep_ann` | r, rr, trtype, t | MWh, net, signed | trade energy | L201 |
+| `cap_ivrt` | i, v, r, t | MW | capacity, setup checks | L19 |
+| `ret_ivrt` | i, v, r, t | MW | coal retirement check | L160 |
+| `gen_ivrt` | i, v, r, t | MWh | generation | L84 |
+| `gen_h` | i, r, h, t | MW | price-setter test | L85 |
+| `cost_vom` | check | check | running cost | L255 (input) |
+| `heat_rate` | check | check | running cost | L263 (input) |
+| `fuel_price` | check | check | running cost | L260 (input) |
+| `repgasprice_r` (optional) | r, t | 2004 $/MMBtu | cross-check of the gas price | L148 |
 
-Transmission files now come from `report_calcs.py`. Each line pair is one row, with r before rr in text order (`report_calcs.py` L21-46). Text order is not number order: "p25" comes before "p3". For net flows, a positive value means flow from r to rr (L124).
+One input file is read as CSV: `<case>/inputs_case/rep/numhours.csv` (h; hours; peak block weight).
 
-The columns for the three input files are not stated in the params file. Check them when you collect the files, and add them here.
+Transmission outputs come from `report_calcs.py`. Each line pair is one row, with r before rr in text order (`report_calcs.py` L21-46). Text order is not number order: "p25" comes before "p3". For net flows, a positive value means flow from r to rr (L124).
 
-Added on 27 Oct for the SMR value analysis: `valnew.csv` (have; type, i, r, t; 2004 $, MW, MWh; params L231) and `reduced_cost.csv` (get; i, v, r, t, bin, variable; 2004 $/kW undiscounted; params L144). Also the marginal of `eq_forceprescription_power` (get; Caleb adds it as a new output; columns and units to check when it arrives), and `lcoe_built.csv` (get; i, r, t; $/MWh; params L116).
+The columns and units of `cost_vom`, `heat_rate` and `fuel_price` are not stated in the params file. 01a reports them; add them here.
+
+For the SMR value analysis: `valnew` (type, i, r, t; 2004 $, MW, MWh; params L231), `reduced_cost` (i, v, r, t, bin, variable; 2004 $/kW undiscounted; params L144) and `lcoe_built` (i, r, t; $/MWh; params L116) are keys in `outputs.h5`. The marginal of `eq_forceprescription_power` is not in `outputs.h5`; Caleb adds it as a new output (columns and units to check when it arrives).
