@@ -1,6 +1,6 @@
 # p25 nuclear study: decision log
 
-Thirty-three decisions are settled (D1 to D33). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
+Thirty-four decisions are settled (D1 to D34). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
 
 | ID | Decided | Decision | Source or reason |
 | --- | --- | --- | --- |
@@ -37,6 +37,7 @@ Thirty-three decisions are settled (D1 to D33). Citations are for ReEDS commit `
 | D31 | 2026-10-28 | The reference arm is `ref` (was `med`) in every decision: D2, D4, D7, D14, D23. Each batch has its own `ref` 0 GW case (D26). D7: the neighbor list is built in each batch from that batch's `ref` 0 GW case. D23: the Verifier samples are UON `ref` 0 GW, UON `ref` 3 GW, UOS `ref` 2.5 GW (replaces `txstBA` 2.5 GW). | Caleb, 28 Oct. |
 | D32 | 2026-10-28 | Blocks: each case uses all of its own blocks with its own `numhours` weights. `ref`, `gaslow`, `pvadv`, `smrcons` have 152 blocks (19 days × 8); `loadhigh` and `loadlow` have 144 (18 days × 8), with block sets that differ from `ref` and from each other. This is accepted as the model fitting days to the load profile. No ratio-only rule for peaks. All levels of one arm share the same blocks and weights, so the Diff (D2) compares the same blocks. | Caleb, 28 Oct. 01b check; `numhours.csv` identical across levels within each load arm (checked 28 Oct). |
 | D33 | 2026-10-28 | Stage 01 storage and names. Tables are written as pandas HDFStore table format (PyTables, zstd), one file per key; no parquet (`pyarrow` is not in the env). 01a renames `allh` to `h` (in `gen_h` and `tran_util_h_rep`), as `reeds/io.py` `read_output` does (L524 at `0c0ea27`). 01 keeps `t` and `Value` and float32; the rename to `year` and `value` and the `unit` column (plan rule 3) are added in 02d. 01a also reads `valnew`, `reduced_cost` and `lcoe_built` for 03g to 03i. | Caleb, 28 Oct. |
+| D34 | 2026-10-29 | No trunk gate. 02a is not built or run. Caleb made the runs with a trunk/branch setup (branches restart from the 0.5 GW trunk at 2044) and checked them earlier, so each branch is taken to equal its trunk through 2041. Replaces the gate in D4 and D28; the trunk and branch terms stay. | Caleb, 29 Oct. |
 
 ## On hold
 
