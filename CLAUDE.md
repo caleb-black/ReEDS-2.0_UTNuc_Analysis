@@ -7,7 +7,10 @@ repo does not modify the model.
 
 ## Source of truth
 - Model behavior, inputs, and outputs are defined ONLY by the ReEDS documentation and code
-  history in `<path/to/reeds>` (docs/, README, changelog, git log).
+  history at ReEDS commit 0c0ea27 (github.com/ReEDS-Model/ReEDS, branch ce/used, no local
+  edits): docs/, README, changelog, git log.
+  Report code: reeds/core/terminus/report.gms, report_params.csv, report_calcs.py.
+- Every claim about the model cites a file and line at 0c0ea27.
 - Do not use outside papers or general knowledge about ReEDS to explain model behavior.
   If the docs don't cover something, say so. Don't guess.
 - Analysis decisions and their rationale live in `docs/plan.md` and `docs/decisions.md`.
@@ -28,13 +31,15 @@ outputs/          # generated artifacts (git-ignored or LFS)
 docs/             # plan.md, decisions.md, data_dictionary.md
 archive/          # superseded scripts awaiting deletion (see cleanup rules)
 ```
-<!-- TODO: adjust stage names to match the master plan once finalized -->
+Script names per stage are listed in `docs/plan.md`.
 
 ## Conventions
 - Script names carry their stage prefix and order: `02_clean/02a_check_units.py`.
 - One script, one job. No script reaches backward into a later stage.
 - Raw ReEDS run outputs are never committed. Reference them by path in `00_config/`.
-- <!-- TODO: language, environment manager, how to run the full pipeline -->
+- Python, in the conda `reeds` environment from `environment.yml` at 0c0ea27, without the
+  GAMS packages (`gamsapi`, `gamspy_base`). Scripts read CSV outputs only (D18).
+- Run the pipeline stage by stage, in the order of `docs/plan.md`.
 
 ## Cleanup rules for legacy scripts
 - Before deleting anything, record what it did and where that function now lives
@@ -43,8 +48,24 @@ archive/          # superseded scripts awaiting deletion (see cleanup rules)
   reproduces their outputs.
 
 ## Scenarios
-<!-- TODO: list each scenario, its key assumptions, and its run folder -->
+- Arms, levels, baselines, groups and metrics: `docs/data_dictionary.md`.
+- Run folders: listed in `00_config/` (stage 00a).
+- Decisions D1 to D23: `docs/decisions.md`. Do not change a decision in code; propose a
+  new decision entry instead.
+- Compare only within an arm, against that arm's own 0 GW case (D2).
+
+## Working rules
+- Follow `docs/plan.md` stage by stage. Stop after each stage and show the check report.
+- A failed gate (trunk gate, setup checks, neighbor list) stops the pipeline. Report it
+  and wait. Never edit data to make a check pass.
+- Keep tables long between stages. Wide tables only in 05_visualize.
+- Convert 2004 USD to 2024 USD (x 1.6563) only in 03_derive.
+
+## Agent team
+- Five agents with fixed bounds: `docs/plan.md`, "Agent team" (D20 to D23).
+- Caleb makes every analysis choice and does every merge.
+- The Verifier never reads the Builder's code and sends only results and gaps.
 
 ## Git
 - Branch per stage or feature. Commit messages reference the stage (`[02_clean] ...`).
-- <!-- TODO: LFS / output handling decision -->
+- Outputs are not committed for now. Decide on Git LFS for final figures later.
