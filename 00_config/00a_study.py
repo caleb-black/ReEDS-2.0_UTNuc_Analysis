@@ -84,10 +84,10 @@ SYSTEM_COST_YEARS = [2044, 2047, 2050]   # D10
 DOLLAR_FACTOR = 1.6563
 DOLLAR_FACTOR_FILE = "inputs/financials/inflation_default.csv"
 
-# Region groups (data dictionary "Region groups"; D7, D13, D31).
+# Region groups (data dictionary "Region groups"; D7, D13, D31, D35a).
 FOCUS = ["p25"]
 UTAH_REST = ["p26"]
-NEIGHBORS_EXPECTED = ["p12", "p16", "p21", "p27", "p31", "p33", "z28"]
+NEIGHBORS_EXPECTED = ["p10", "p12", "p16", "p21", "p24", "p27", "p31", "p33", "z28"]  # D35a
 N_WEST_ZONES = 34
 
 
