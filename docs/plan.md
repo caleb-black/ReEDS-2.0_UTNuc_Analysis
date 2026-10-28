@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D33 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D34 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -12,13 +12,13 @@ Each stage ends with a check that you look at. The next stage starts only after 
 2. **Read only from earlier stages.** A script never reads from a later stage or from its own stage's outputs.
 3. **Data stays long.** Every table between stages has one row per value, with these columns: batch, arm, level, case, region or group, year, metric, sub-key (tech, block, line), value, unit. Wide tables are made only in stage 05 (D11).
 4. **Each stage writes a check report.** A short file with counts, pass or fail for each check, and the path of each check figure. Claude Code shows you this report before it moves on.
-5. **Stop on failure.** A failed gate (D4, setup checks, neighbor list) stops the pipeline. Claude Code reports the failure and waits for you. It does not change the data to make a check pass.
+5. **Stop on failure.** A failed gate (setup checks, neighbor list) stops the pipeline. Claude Code reports the failure and waits for you. It does not change the data to make a check pass.
 6. **Dollars change only once.** Convert 2004 USD to 2024 USD (factor 1.6563, D8) in stage 03. Earlier stages keep model units.
 7. **No new model claims in code.** If a script needs a fact about ReEDS that `docs/data_dictionary.md` does not have, Claude Code asks you and cites the file and line at `0c0ea27`.
 
 ## Stages 00 to 05
 
-There are six stages. The two gates that can stop the work are in stage 02.
+There are six stages. The gates that can stop the work (setup checks, neighbor list) are in stage 02.
 
 ### 00\_config: write down the study
 
@@ -35,7 +35,7 @@ There are six stages. The two gates that can stop the work are in stage 02.
 
 ### 02\_clean: prove the runs are fit to use
 
-- **02a\_trunk\_gate** (D4) — (D28) Within each batch, each branch equals its trunk (0.5 GW case of the same arm) for every year up to 2041, in every output. **Stops on failure.**
+- **02a\_trunk\_gate** — Not built (D34). Caleb confirmed the branches equal their trunks through 2041.
 - **02b\_setup\_checks** — p25 coal is near zero from 2044. p25 nuclear equals the level in each case. Where the model also builds nuclear on its own, prescribed and endogenous nuclear are shown apart. The 0 GW cases have no new p25 nuclear.
 - **02c\_neighbor\_list** (D7) — In each batch, builds the neighbor list from `tran_out` (that batch's 0 GW `ref`, both columns; D31). Compares it with the expected list (p12, p16, p21, p27, p31, p33, z28). **Stops if they differ.**
 - **02d\_units** — Confirms units per file against `docs/data_dictionary.md`. Confirms all solve years are present. Renames `t` to `year` and `Value` to `value`, and adds the `unit` column (plan rule 3, D33).
@@ -103,7 +103,7 @@ Five agents do the work. You make every analysis choice and do every merge (D20)
 **Order of work in each stage** (commands in `docs/how_to_run.md`)
 
 1. The Builder writes the stage scripts and runs them. Each stage writes its check report to `outputs/checks/<stage>.md` (D24).
-2. The Verifier recomputes the check values for the sample cases: UON `ref` 0 GW, UON `ref` 3 GW, UOS `ref` 2.5 GW (D23, D31). The trunk gate script already compares every case.
+2. The Verifier recomputes the check values for the sample cases: UON `ref` 0 GW, UON `ref` 3 GW, UOS `ref` 2.5 GW (D23, D31).
 3. The Verifier tells the Builder only what is different: the metric, the case, both values and the gap. It reports any relative gap above 1e-4 (D21).
 4. The Builder has one try to fix each gap. If a gap stays, it goes to you with both values. You check the logic.
 5. The Reviewer checks the PR. A failed check blocks the PR.
