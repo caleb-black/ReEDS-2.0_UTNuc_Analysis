@@ -1,6 +1,6 @@
 # p25 nuclear study: decision log
 
-Thirty-one decisions are settled (D1 to D31). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
+Thirty-three decisions are settled (D1 to D33). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
 
 | ID | Decided | Decision | Source or reason |
 | --- | --- | --- | --- |
@@ -35,6 +35,8 @@ Thirty-one decisions are settled (D1 to D31). Citations are for ReEDS commit `0c
 | D29 | 2026-10-28 | Scripts read model outputs from `<case>/outputs/outputs.h5` with `h5py`, in the layout that `reeds/io.py` `read_h5` reads (L420-433 at `0c0ea27`): one group per output, a `columns` list, one dataset per column, strings in UTF-8. Not `pandas.read_hdf`: the file is not in pytables format, and the `report_dump.py` L151 docstring does not match the code. An output with no rows is not written to the file (`reeds/io.py` L506); a missing key means an empty table, not an error. The output CSVs duplicate `outputs.h5` (`cleanup_files.py` L29). GDX files are still not read. Replaces the "CSV outputs only" part of D18. | Caleb, 28 Oct. Format checked on `UON_20261022_0G_ref`. |
 | D30 | 2026-10-28 | Model citations stay at `0c0ea27`, read with `git show 0c0ea27:<path>` from `C:\Users\caleb\ReEDS` (HEAD `ba40ec2`, 26 commits later). The `ce/used` branch is not fetched. Caleb judges the later changes minor for this study; the known model change is the firm transfer limit in `c_model.gms` (NERC to FERC/`transreg`, commit `1268b4f`). Setup values in D17 are read from each run's `inputs_case/switches.csv` in 00a and recorded, not assumed. | Caleb, 28 Oct. Updates D1 and D17. |
 | D31 | 2026-10-28 | The reference arm is `ref` (was `med`) in every decision: D2, D4, D7, D14, D23. Each batch has its own `ref` 0 GW case (D26). D7: the neighbor list is built in each batch from that batch's `ref` 0 GW case. D23: the Verifier samples are UON `ref` 0 GW, UON `ref` 3 GW, UOS `ref` 2.5 GW (replaces `txstBA` 2.5 GW). | Caleb, 28 Oct. |
+| D32 | 2026-10-28 | Blocks: each case uses all of its own blocks with its own `numhours` weights. `ref`, `gaslow`, `pvadv`, `smrcons` have 152 blocks (19 days × 8); `loadhigh` and `loadlow` have 144 (18 days × 8), with block sets that differ from `ref` and from each other. This is accepted as the model fitting days to the load profile. No ratio-only rule for peaks. All levels of one arm share the same blocks and weights, so the Diff (D2) compares the same blocks. | Caleb, 28 Oct. 01b check; `numhours.csv` identical across levels within each load arm (checked 28 Oct). |
+| D33 | 2026-10-28 | Stage 01 storage and names. Tables are written as pandas HDFStore table format (PyTables, zstd), one file per key; no parquet (`pyarrow` is not in the env). 01a renames `allh` to `h` (in `gen_h` and `tran_util_h_rep`), as `reeds/io.py` `read_output` does (L524 at `0c0ea27`). 01 keeps `t` and `Value` and float32; the rename to `year` and `value` and the `unit` column (plan rule 3) are added in 02d. 01a also reads `valnew`, `reduced_cost` and `lcoe_built` for 03g to 03i. | Caleb, 28 Oct. |
 
 ## On hold
 

@@ -58,7 +58,7 @@ Every region belongs to exactly one of the first four groups. `wecc` is the sum 
 | Trunk gate | The check that every branch equals its trunk through 2041, in every output (D4, D28). |
 | Shared levels | 0, 0.5, 1.5, 2.5 GW. Used for slopes that compare arms (D3). |
 | Solve year | A year the model solves: 2010, 2015, 2020, 2023, then every 3 years to 2050. Post-plant years are 2044, 2047, 2050. |
-| Block | One representative 3-hour period (152 per year, names `y2012dDDDhHHH`). Its weight in hours is in `numhours.csv`. |
+| Block | One representative 3-hour period (152 per year in most arms, 144 in `loadhigh` and `loadlow`, D32; names `y2012dDDDhHHH`). Its weight in hours is in `numhours.csv`. |
 | Stress block | A period chosen by the adequacy loop, used for the reserve margin (names `sy<year>dDDDhHHH`). Not used for energy prices. |
 | Diff | Case value minus the value of the arm's own 0 GW case in the same batch, same region or group and year (D2, D27). |
 | Relative Diff | Diff divided by the 0 GW value, in %. Used only for the metrics named in D11. |
@@ -94,7 +94,9 @@ Every arm uses its own 0 GW case in the same batch as baseline (D2, D27). Switch
 | `loadhigh` | 0 to 3, step 0.5 | As in UON | |
 | `loadlow` | 0 to 3, step 0.5 | As in UON | |
 
-Not used (D27): UON `gashigh` (`ngscen` = `AEO_2026_LOG`, L39; 0, 0.5, 1.5, 2.5 GW), because the model builds nuclear there on its own; and UOS `gashigh`, `gaslow`, `pvadv` and `smrcons` (0.5, 1.5, 2.5 GW), because they have no 0 GW case. Whether the load arms change the representative hours is not yet checked; 01a can compare `numhours.csv` across arms.
+Not used (D27): UON `gashigh` (`ngscen` = `AEO_2026_LOG`, L39; 0, 0.5, 1.5, 2.5 GW), because the model builds nuclear there on its own; and UOS `gashigh`, `gaslow`, `pvadv` and `smrcons` (0.5, 1.5, 2.5 GW), because they have no 0 GW case.
+
+The load arms have their own representative days (D32): `loadhigh` and `loadlow` have 144 blocks, the other arms 152. Within one arm, all levels have the same blocks and weights.
 
 ## Metrics
 
@@ -136,21 +138,21 @@ Each output is a key in `<case>/outputs/outputs.h5`, read in the layout of `reed
 | `expenditure_flow_rps`, `expenditure_flow_int` | st, ast, t / r, t | 2004 $ | cost view B | L78, L79 |
 | `tran_out` | r, rr, trtype, t | MW | neighbor list, line capacity | L223 |
 | `invtran_out` | r, rr, trtype, t | MW | new lines | L114 |
-| `tran_util_h_rep` | r, rr, h, trtype, t | fraction of capacity, per direction | line at limit in peak block | L203 |
+| `tran_util_h_rep` | r, rr, h, t, trtype (file order; params L203 declares r, rr, allh, trtype, t) | fraction of capacity, per direction | line at limit in peak block | L203 |
 | `tran_flow_rep_ann` | r, rr, trtype, t | MWh, net, signed | trade energy | L201 |
 | `cap_ivrt` | i, v, r, t | MW | capacity, setup checks | L19 |
 | `ret_ivrt` | i, v, r, t | MW | coal retirement check | L160 |
 | `gen_ivrt` | i, v, r, t | MWh | generation | L84 |
 | `gen_h` | i, r, h, t | MW | price-setter test | L85 |
-| `cost_vom` | check | check | running cost | L255 (input) |
-| `heat_rate` | check | check | running cost | L263 (input) |
-| `fuel_price` | check | check | running cost | L260 (input) |
+| `cost_vom` | i, v, r, t (solve years) | Not covered in the documentation | running cost | L255 (input) |
+| `heat_rate` | i, v, r, t (solve years) | Not covered in the documentation | running cost | L263 (input) |
+| `fuel_price` | i, r, t (every year; no `v`) | Not covered in the documentation | running cost | L260 (input) |
 | `repgasprice_r` (optional) | r, t | 2004 $/MMBtu | cross-check of the gas price | L148 |
 
 One input file is read as CSV: `<case>/inputs_case/rep/numhours.csv` (h; hours; peak block weight).
 
 Transmission outputs come from `report_calcs.py`. Each line pair is one row, with r before rr in text order (`report_calcs.py` L21-46). Text order is not number order: "p25" comes before "p3". For net flows, a positive value means flow from r to rr (L124).
 
-The columns and units of `cost_vom`, `heat_rate` and `fuel_price` are not stated in the params file. 01a reports them; add them here.
+`report_params.csv` lists `cost_vom`, `heat_rate` and `fuel_price` with no index, unit or description. The columns above are as found in `outputs.h5` (01a, 28 Oct). Their units are not covered in the documentation. `fuel_price` has one value per region and year shared by all techs that burn the same fuel, and no `v` column, so the running-cost join in 03e matches it on i, r, t only. In the file, `gen_h` and `tran_util_h_rep` name the block column `allh`; 01a renames it to `h` (D33).
 
 For the SMR value analysis: `valnew` (type, i, r, t; 2004 $, MW, MWh; params L231), `reduced_cost` (i, v, r, t, bin, variable; 2004 $/kW undiscounted; params L144) and `lcoe_built` (i, r, t; $/MWh; params L116) are keys in `outputs.h5`. The marginal of `eq_forceprescription_power` is not in `outputs.h5`; Caleb adds it as a new output (columns and units to check when it arrives).
