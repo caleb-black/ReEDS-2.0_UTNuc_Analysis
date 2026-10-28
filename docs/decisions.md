@@ -1,6 +1,6 @@
 # p25 nuclear study: decision log
 
-Thirty-five decisions are settled (D1 to D35). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
+Thirty-six decisions are settled (D1 to D36). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
 
 | ID | Decided | Decision | Source or reason |
 | --- | --- | --- | --- |
@@ -39,6 +39,7 @@ Thirty-five decisions are settled (D1 to D35). Citations are for ReEDS commit `0
 | D33 | 2026-10-28 | Stage 01 storage and names. Tables are written as pandas HDFStore table format (PyTables, zstd), one file per key; no parquet (`pyarrow` is not in the env). 01a renames `allh` to `h` (in `gen_h` and `tran_util_h_rep`), as `reeds/io.py` `read_output` does (L524 at `0c0ea27`). 01 keeps `t` and `Value` and float32; the rename to `year` and `value` and the `unit` column (plan rule 3) are added in 02d. 01a also reads `valnew`, `reduced_cost` and `lcoe_built` for 03g to 03i. | Caleb, 28 Oct. |
 | D34 | 2026-10-29 | No trunk gate. 02a is not built or run. Caleb made the runs with a trunk/branch setup (branches restart from the 0.5 GW trunk at 2044) and checked them earlier, so each branch is taken to equal its trunk through 2041. Replaces the gate in D4 and D28; the trunk and branch terms stay. | Caleb, 29 Oct. |
 | D35 | 2026-10-29 | Stage 02 is reduced. (a) Neighbors of p25 are all zones joined to it by any line in `tran_out` of the batch's `ref` 0 GW case, AC or DC: p10 (LCC), p12, p16, p21, p24 (VSC), p27, p31, p33, z28. Nine zones in both batches; `rest_wecc` has 23. 02c checks `tran_out` against this list and stops if they differ. (b) The 02b setup checks (coal, nuclear) are not run as gates; Caleb confirmed the setup. (c) 02d does not check units: it renames `t`/`Value` to `year`/`value` and adds `unit` from the data dictionary, or "not stated" where the dictionary has none. | Caleb, 29 Oct. 02c found p10 and p24 in `tran_out`; `interfaces_r.csv` lists AC interfaces only. |
+| D36 | 2026-10-29 | No duplicate tables, units by lookup. The stage 01 files (one per output key, `outputs/01_ingest/`) are the model data for all later stages; later stages read only the keys they need, filtered on read. ReEDS column names (`t`, `Value`, `h` and so on) are kept. 02d writes only a units lookup table (key, type where units differ by type, unit; from `docs/data_dictionary.md`, "not stated" where it has none). Later stages join it when they need a unit. Tables made in stage 03 and later stay long. Replaces the renames and the `unit` column in D33 and D35c, and the `year`/`value`/`unit` columns in plan rule 3 for model data. | Caleb, 29 Oct. Avoids a ~430 MB copy of the 01 data. |
 
 ## On hold
 

@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D35 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D36 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -10,7 +10,7 @@ Each stage ends with a check that you look at. The next stage starts only after 
 
 1. **One script, one job.** Name each script with its stage and order, for example `02_clean/02a_trunk_gate`.
 2. **Read only from earlier stages.** A script never reads from a later stage or from its own stage's outputs.
-3. **Data stays long.** Every table between stages has one row per value, with these columns: batch, arm, level, case, region or group, year, metric, sub-key (tech, block, line), value, unit. Wide tables are made only in stage 05 (D11).
+3. **Data stays long.** Every table between stages has one row per value, with batch, arm, level, case and the ReEDS index columns. Model data are the stage 01 files, read as needed and not copied (D36); units come from the 02d units lookup. Wide tables are made only in stage 05 (D11).
 4. **Each stage writes a check report.** A short file with counts, pass or fail for each check, and the path of each check figure. Claude Code shows you this report before it moves on.
 5. **Stop on failure.** A failed gate (neighbor list, D35) stops the pipeline. Claude Code reports the failure and waits for you. It does not change the data to make a check pass.
 6. **Dollars change only once.** Convert 2004 USD to 2024 USD (factor 1.6563, D8) in stage 03. Earlier stages keep model units.
@@ -38,7 +38,7 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 - **02a\_trunk\_gate** — Not built (D34). Caleb confirmed the branches equal their trunks through 2041.
 - **02b\_setup\_checks** — Not run as a gate (D35b). Caleb confirmed the setup. Only the check figure below is kept.
 - **02c\_neighbor\_list** (D7, D35a) — In each batch, builds the neighbor list from `tran_out` (that batch's 0 GW `ref`, both columns, any line type; D31). Compares it with the list in D35 (p10, p12, p16, p21, p24, p27, p31, p33, z28). **Stops if they differ.**
-- **02d\_units** (D33, D35c) — Renames `t` to `year` and `Value` to `value`, and adds the `unit` column from `docs/data_dictionary.md` ("not stated" where it has none). No unit check.
+- **02d\_units** (D36) — Writes a units lookup table: key, type (where units differ by type), unit, from `docs/data_dictionary.md` ("not stated" where it has none). No renames, no copy of the data, no unit check.
   - **You check:** the gate report (pass or fail per case and file), and one plot of p25 capacity by technology over time, one panel per case.
 
 ### 03\_derive: one value per region, year, case
