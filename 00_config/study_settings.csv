@@ -1,0 +1,13 @@
+setting,value,unit,source
+runs_root,D:\ReEDS\runs,,D25
+reeds_source,C:\Users\caleb\ReEDS,,D30
+reeds_commit,0c0ea27500755f3e2513b93c6d97a74b95846021,,"D1, D30"
+reeds_source_head,ba40ec23eeec4bccebc572890cc7a295a6cd5e25,,D30
+solve_years,2010 2015 2020 2023 2026 2029 2032 2035 2038 2041 2044 2047 2050,year,data_dictionary.md Study terms; checked against inputs_case/modeledyears.csv
+post_plant_years,2044 2047 2050,year,data_dictionary.md Study terms
+system_cost_years,2044 2047 2050,year,D10
+trunk_gate_last_year,2041,year,"D4, D28"
+trunk_level,0.5,GW,data_dictionary.md Study terms; D28
+shared_levels,0 0.5 1.5 2.5,GW,D3
+dollar_factor_2004_to_2024,1.6563,2024 USD per 2004 USD,D8; inputs/financials/inflation_default.csv L93-L112 at 0c0ea27
+n_west_zones,34,,inputs/zones/z132/hierarchy.csv at 0c0ea27

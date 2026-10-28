@@ -1,0 +1,137 @@
+batch,group,region,source
+UON,focus,p25,fixed
+UON,neighbors,p12,expected; confirmed from tran_out in 02c
+UON,neighbors,p16,expected; confirmed from tran_out in 02c
+UON,neighbors,p21,expected; confirmed from tran_out in 02c
+UON,neighbors,p27,expected; confirmed from tran_out in 02c
+UON,neighbors,p31,expected; confirmed from tran_out in 02c
+UON,neighbors,p33,expected; confirmed from tran_out in 02c
+UON,neighbors,z28,expected; confirmed from tran_out in 02c
+UON,rest_wecc,p1,34 zones minus the groups above
+UON,rest_wecc,p10,34 zones minus the groups above
+UON,rest_wecc,p11,34 zones minus the groups above
+UON,rest_wecc,p13,34 zones minus the groups above
+UON,rest_wecc,p14,34 zones minus the groups above
+UON,rest_wecc,p15,34 zones minus the groups above
+UON,rest_wecc,p17,34 zones minus the groups above
+UON,rest_wecc,p18,34 zones minus the groups above
+UON,rest_wecc,p19,34 zones minus the groups above
+UON,rest_wecc,p2,34 zones minus the groups above
+UON,rest_wecc,p20,34 zones minus the groups above
+UON,rest_wecc,p22,34 zones minus the groups above
+UON,rest_wecc,p23,34 zones minus the groups above
+UON,rest_wecc,p24,34 zones minus the groups above
+UON,rest_wecc,p29,34 zones minus the groups above
+UON,rest_wecc,p3,34 zones minus the groups above
+UON,rest_wecc,p32,34 zones minus the groups above
+UON,rest_wecc,p34,34 zones minus the groups above
+UON,rest_wecc,p4,34 zones minus the groups above
+UON,rest_wecc,p5,34 zones minus the groups above
+UON,rest_wecc,p59,34 zones minus the groups above
+UON,rest_wecc,p6,34 zones minus the groups above
+UON,rest_wecc,p7,34 zones minus the groups above
+UON,rest_wecc,p8,34 zones minus the groups above
+UON,rest_wecc,p9,34 zones minus the groups above
+UON,utah_rest,p26,fixed
+UON,wecc,p1,all 34 zones
+UON,wecc,p10,all 34 zones
+UON,wecc,p11,all 34 zones
+UON,wecc,p12,all 34 zones
+UON,wecc,p13,all 34 zones
+UON,wecc,p14,all 34 zones
+UON,wecc,p15,all 34 zones
+UON,wecc,p16,all 34 zones
+UON,wecc,p17,all 34 zones
+UON,wecc,p18,all 34 zones
+UON,wecc,p19,all 34 zones
+UON,wecc,p2,all 34 zones
+UON,wecc,p20,all 34 zones
+UON,wecc,p21,all 34 zones
+UON,wecc,p22,all 34 zones
+UON,wecc,p23,all 34 zones
+UON,wecc,p24,all 34 zones
+UON,wecc,p25,all 34 zones
+UON,wecc,p26,all 34 zones
+UON,wecc,p27,all 34 zones
+UON,wecc,p29,all 34 zones
+UON,wecc,p3,all 34 zones
+UON,wecc,p31,all 34 zones
+UON,wecc,p32,all 34 zones
+UON,wecc,p33,all 34 zones
+UON,wecc,p34,all 34 zones
+UON,wecc,p4,all 34 zones
+UON,wecc,p5,all 34 zones
+UON,wecc,p59,all 34 zones
+UON,wecc,p6,all 34 zones
+UON,wecc,p7,all 34 zones
+UON,wecc,p8,all 34 zones
+UON,wecc,p9,all 34 zones
+UON,wecc,z28,all 34 zones
+UOS,focus,p25,fixed
+UOS,neighbors,p12,expected; confirmed from tran_out in 02c
+UOS,neighbors,p16,expected; confirmed from tran_out in 02c
+UOS,neighbors,p21,expected; confirmed from tran_out in 02c
+UOS,neighbors,p27,expected; confirmed from tran_out in 02c
+UOS,neighbors,p31,expected; confirmed from tran_out in 02c
+UOS,neighbors,p33,expected; confirmed from tran_out in 02c
+UOS,neighbors,z28,expected; confirmed from tran_out in 02c
+UOS,rest_wecc,p1,34 zones minus the groups above
+UOS,rest_wecc,p10,34 zones minus the groups above
+UOS,rest_wecc,p11,34 zones minus the groups above
+UOS,rest_wecc,p13,34 zones minus the groups above
+UOS,rest_wecc,p14,34 zones minus the groups above
+UOS,rest_wecc,p15,34 zones minus the groups above
+UOS,rest_wecc,p17,34 zones minus the groups above
+UOS,rest_wecc,p18,34 zones minus the groups above
+UOS,rest_wecc,p19,34 zones minus the groups above
+UOS,rest_wecc,p2,34 zones minus the groups above
+UOS,rest_wecc,p20,34 zones minus the groups above
+UOS,rest_wecc,p22,34 zones minus the groups above
+UOS,rest_wecc,p23,34 zones minus the groups above
+UOS,rest_wecc,p24,34 zones minus the groups above
+UOS,rest_wecc,p29,34 zones minus the groups above
+UOS,rest_wecc,p3,34 zones minus the groups above
+UOS,rest_wecc,p32,34 zones minus the groups above
+UOS,rest_wecc,p34,34 zones minus the groups above
+UOS,rest_wecc,p4,34 zones minus the groups above
+UOS,rest_wecc,p5,34 zones minus the groups above
+UOS,rest_wecc,p59,34 zones minus the groups above
+UOS,rest_wecc,p6,34 zones minus the groups above
+UOS,rest_wecc,p7,34 zones minus the groups above
+UOS,rest_wecc,p8,34 zones minus the groups above
+UOS,rest_wecc,p9,34 zones minus the groups above
+UOS,utah_rest,p26,fixed
+UOS,wecc,p1,all 34 zones
+UOS,wecc,p10,all 34 zones
+UOS,wecc,p11,all 34 zones
+UOS,wecc,p12,all 34 zones
+UOS,wecc,p13,all 34 zones
+UOS,wecc,p14,all 34 zones
+UOS,wecc,p15,all 34 zones
+UOS,wecc,p16,all 34 zones
+UOS,wecc,p17,all 34 zones
+UOS,wecc,p18,all 34 zones
+UOS,wecc,p19,all 34 zones
+UOS,wecc,p2,all 34 zones
+UOS,wecc,p20,all 34 zones
+UOS,wecc,p21,all 34 zones
+UOS,wecc,p22,all 34 zones
+UOS,wecc,p23,all 34 zones
+UOS,wecc,p24,all 34 zones
+UOS,wecc,p25,all 34 zones
+UOS,wecc,p26,all 34 zones
+UOS,wecc,p27,all 34 zones
+UOS,wecc,p29,all 34 zones
+UOS,wecc,p3,all 34 zones
+UOS,wecc,p31,all 34 zones
+UOS,wecc,p32,all 34 zones
+UOS,wecc,p33,all 34 zones
+UOS,wecc,p34,all 34 zones
+UOS,wecc,p4,all 34 zones
+UOS,wecc,p5,all 34 zones
+UOS,wecc,p59,all 34 zones
+UOS,wecc,p6,all 34 zones
+UOS,wecc,p7,all 34 zones
+UOS,wecc,p8,all 34 zones
+UOS,wecc,p9,all 34 zones
+UOS,wecc,z28,all 34 zones
