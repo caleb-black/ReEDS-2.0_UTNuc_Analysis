@@ -129,8 +129,8 @@ Each output is a key in `<case>/outputs/outputs.h5`, read in the layout of `reed
 
 | Key | Columns | Unit | Used for | Params row |
 | --- | --- | --- | --- | --- |
-| `reqt_price` | type, subtype, r, h, t | load: 2004 $/MWh | prices | L154 |
-| `reqt_quant` | type, subtype, r, h, t | load: MWh per block | prices (weights) | L156 |
+| `reqt_price` | type, subtype, r, h, t | load and oper\_res: 2004 $/MWh; res\_marg: 2004 $/MW per stress timeslice (`report.gms` L330-331); other types not stated | prices | L154 |
+| `reqt_quant` | type, subtype, r, h, t | load: MWh per block; oper\_res: MWh; res\_marg: MW (`report.gms` L366); other types not stated | prices (weights) | L156 |
 | `systemcost_ba_bulk_ew` | sys\_costs, r, t | 2004 $ | system cost | L190 |
 | `net_import_ann_rep` | r, t | MWh | net imports | L209 |
 | `net_import_ann_stress` (optional) | r, t | MWh | net imports in stress periods, check only | L210 |
