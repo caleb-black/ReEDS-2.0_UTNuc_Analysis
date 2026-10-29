@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D39 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D41 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -22,9 +22,9 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 
 ### 00\_config: write down the study
 
-- **00a\_study** — Lists every case of UON and UOS (D25, D27): folder name, batch, arm, level, path to `<case>/outputs/outputs.h5`. Records the setup switches of every case from `inputs_case/switches.csv` (D30), the ReEDS source path and HEAD. Also lists the groups, the 34 zones, report years, dollar factor.
+- **00a\_study** — Lists every case of UON and UOS (D25, D27): folder name, batch, arm, level, path to `<case>/outputs/outputs.h5`. Records the setup switches of every case from `inputs_case/switches.csv` (D30), the ReEDS source path and HEAD. Compares each case's copy of `report.gms`, `report_params.csv` and `c_model.gms` with `0c0ea27` (D40). Also lists the groups, the 34 zones, report years, dollar factor.
   - In: `D:\ReEDS\runs` (path set once). Out: `study_cases`, `case_switches` and `region_groups` tables.
-  - **You check:** one table of all cases. Each batch and arm has the levels in the arm tables of `docs/data_dictionary.md`. No case is missing. Each case has `outputs/outputs.h5`. Setup switches match the data dictionary, except the arm switch.
+  - **You check:** one table of all cases. Each batch and arm has the levels in the arm tables of `docs/data_dictionary.md`. No case is missing. Each case has `outputs/outputs.h5`. Setup switches match the data dictionary, except the arm switch. Every case's model code equals `0c0ea27` (D40).
 
 ### 01\_ingest: copy raw files, change nothing
 
@@ -55,7 +55,7 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 
 - **04a\_groups** — Aggregates every metric to the five groups, with the rule in the metrics table of `docs/data_dictionary.md`.
 - **04b\_diff** (D2, D11) — Diff (and % where D11 says) against the arm's own 0 GW case in the same batch.
-- **04c\_slopes** (D3) — Slopes on the shared levels only.
+- **04c\_slopes** (D41) — For each batch, arm, group and metric: the step slope between each pair of neighboring levels (Diff change per GW), on every level of the batch. No line or curve is fitted (D41).
 - **04d\_peak\_drilldown** (D14) — For each group peak block: one row per member region.
 - **04e\_neighbor\_table** — Price change for each neighbor of p25 (sanity check).
   - **You check:** Diff against level, one line per group, one panel per arm, one figure per batch (D26). Every value before 2044 is zero. Changes are smooth and mostly in one direction; anything else gets a written note.

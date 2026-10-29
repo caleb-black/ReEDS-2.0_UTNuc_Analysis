@@ -56,7 +56,7 @@ Every region belongs to exactly one of the first four groups. `wecc` is the sum 
 | Trunk | The 0.5 GW case of an arm, in the same batch. A full run from 2010. |
 | Branch | Any other level. A copy of the trunk restarted at 2044 with a different nuclear size. |
 | Trunk gate | The check that every branch equals its trunk through 2041 (D4, D28). Not run: Caleb confirmed it (D34). |
-| Shared levels | 0, 0.5, 1.5, 2.5 GW. Used for slopes that compare arms (D3). |
+| Step slope | Change in Diff between two neighboring levels, divided by the change in level, per GW. Uses every level of the batch (D41). Replaces "shared levels" (D3). |
 | Solve year | A year the model solves: 2010, 2015, 2020, 2023, then every 3 years to 2050. Post-plant years are 2044, 2047, 2050. |
 | Block | One representative 3-hour period (152 per year in most arms, 144 in `loadhigh` and `loadlow`, D32; names `y2012dDDDhHHH`). Its weight in hours is in `numhours.csv`. |
 | Stress block | A period chosen by the adequacy loop, used for the reserve margin (names `sy<year>dDDDhHHH`). Not used for energy prices. |
