@@ -42,7 +42,7 @@ results.py uses the case's `r` set (L320); a region with no row gets 0.
 Not done here (results.py does it, but it does not change the annualized
 values): inflate_series to 2024 $ with deflator.csv (L344, L219-227; D8 uses
 1.6563 instead), the 1e-9 scaling (L330), discounting (L476-480), the
-2024-2050 filter (L487-488), drop_zeros (L499-501).
+2024-2050 filter (L487-488), drop_zeros (L501-503).
 
 Dollars: all values x 1.6563 (D8), column converted_2004_to_2024 = True.
 
@@ -540,7 +540,9 @@ def main():
         "### Checks\n",
         dc.md_table(pd.DataFrame(checks, columns=["check", "result", "detail"])) + "\n",
         "### Second calculation, sample cases (2004 $ before the factor)\n",
-        dc.md_table(ind, floatfmt="{:.3g}") + "\n",
+        *[f"**{b}**\n\n" + dc.md_table(ind[ind["case"].str.startswith(b + "_")],
+                                       floatfmt="{:.3g}") + "\n"
+          for b in ("UON", "UOS")],                                       # D26
         f"### Plan check: national values of `{CHECK_CASE}` (2024 $)\n",
         "03b2 against the second calculation:\n",
         dc.md_table(nat_cmp, floatfmt="{:,.6g}") + "\n",
@@ -552,7 +554,9 @@ def main():
         "Undiscounted 2044-2050 sum:\n",
         dc.md_table(nat_tot, floatfmt="{:,.6g}") + "\n",
         "### Verifier sample cases: p25 (2024 $)\n",
-        dc.md_table(p25, floatfmt="{:,.6g}") + "\n",
+        *[f"**{b}**\n\n" + dc.md_table(p25[p25["case"].str.startswith(b + "_")],
+                                       floatfmt="{:,.6g}") + "\n"
+          for b in ("UON", "UOS")],                                       # D26
         "### Converter-cost carry-over (decisions.md, On hold), UON `ref`\n",
         "Diff of annualized `inv_converter_costs` against UON `ref` 0 GW, 2044-2050, "
         "2024 $; split into converters built before 2044 (carried over through the "
