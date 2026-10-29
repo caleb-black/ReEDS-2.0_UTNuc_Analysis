@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D42 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D43 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -63,7 +63,7 @@ A fast, rough pass over the stage 03 outputs. Its only job is to show which metr
 
 ### 04\_analyze: groups and differences
 
-- **04a\_groups** — Only for the metrics that 04s marked to go on (D42). Aggregates every metric to the five groups, with the rule in the metrics table of `docs/data_dictionary.md`.
+- **04a\_groups** — Only for the go-on metrics in D43 (system cost waits for the annualization decision, D43b). Full work on UON; UOS only as a check of UON claims (D43d). Aggregates every metric to the five groups, with the rule in the metrics table of `docs/data_dictionary.md`.
 - **04b\_diff** (D2, D11) — Diff (and % where D11 says) against the arm's own 0 GW case in the same batch.
 - **04c\_slopes** (D41) — For each batch, arm, group and metric: the step slope between each pair of neighboring levels (Diff change per GW), on every level of the batch. No line or curve is fitted (D41).
 - **04d\_peak\_drilldown** (D14) — For each group peak block: one row per member region.
