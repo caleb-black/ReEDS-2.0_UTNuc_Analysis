@@ -108,7 +108,8 @@ Average price, peak price and system cost are the primary results. The rest expl
 | Average all-in price | As above, with dollars from `load`, `res_marg`, `oper_res`, `state_rps`, `nat_gen` | 2024 $/MWh | `reqt_price`, `reqt_quant` | Same | Absolute and % |
 | Peak price | Highest energy price over blocks, with block name and hours; 2nd and 3rd highest too | 2024 $/MWh | `reqt_price`, `numhours` | Group price per block (sum of dollars / sum of load over members), then the highest block (D14) | Absolute and % |
 | Peak/average ratio | Peak price divided by average energy price | ratio | derived | From the group's own peak and average | Absolute |
-| System cost | Sum of `inv_*` and `op_*` categories over 2044, 2047, 2050 | 2024 $ | `systemcost_ba_bulk_ew` | Sum | Absolute and % |
+| System cost (primary, D44) | Annualized: capital × `crf` / 1.02 paid over 30 years (40 for transmission) from the build year, plus that year's operations; each year 2044 to 2050 and the undiscounted 2044 to 2050 total | 2024 $ | `systemcost_ba`, `crf` (inputs) | Sum | Absolute and % |
+| System cost, cross-check (D10) | Sum of `inv_*` and `op_*` categories over 2044, 2047, 2050 | 2024 $ | `systemcost_ba_bulk_ew` | Sum | Absolute and % |
 | Net imports | Annual net imports in representative periods | MWh | `net_import_ann_rep` | Sum (flows inside a group cancel, except losses) | Absolute |
 | Expenditure flows | Value of energy and capacity sent from r to rr | 2024 $ | `expenditure_flow` | Sum of flows that cross the group border | Absolute |
 | Transmission | Line capacity; new lines | MW | `tran_out`, `invtran_out` | Sum over lines touching the group | Absolute |
@@ -121,7 +122,7 @@ Average price, peak price and system cost are the primary results. The rest expl
 
 **Peak block drill-down (D14).** The group peak names one block. For that block, make one table with one row per member region: energy price, `load` quantity, share of the group's dollars, price-setter type (D12), and each line that touches the region with its flow as % of capacity. This shows which region and which limit (generation or transmission) drives the group peak.
 
-**Caution for the system cost map.** INFERENCE: `systemcost_ba_bulk_ew` puts a cost in the region where the plant or line is. It does not say who pays. So p25 will show a large cost rise, and its neighbors can show a fall, even when they buy the power. Show the `expenditure_flow` map next to it, so that the reader sees where the money goes.
+**Caution for the system cost map.** INFERENCE: `systemcost_ba` and `systemcost_ba_bulk_ew` put a cost in the region where the plant or line is. They do not say who pays. So p25 will show a large cost rise, and its neighbors can show a fall, even when they buy the power. Show the `expenditure_flow` map next to it, so that the reader sees where the money goes.
 
 ## Outputs read from each run
 
@@ -131,7 +132,8 @@ Each output is a key in `<case>/outputs/outputs.h5`, read in the layout of `reed
 | --- | --- | --- | --- | --- |
 | `reqt_price` | type, subtype, r, h, t | load and oper\_res: 2004 $/MWh; res\_marg: 2004 $/MW per stress timeslice (`report.gms` L330-331); other types not stated | prices | L154 |
 | `reqt_quant` | type, subtype, r, h, t | load: MWh per block; oper\_res: MWh; res\_marg: MW (`report.gms` L366); other types not stated | prices (weights) | L156 |
-| `systemcost_ba_bulk_ew` | sys\_costs, r, t | 2004 $ | system cost | L190 |
+| `systemcost_ba_bulk_ew` | sys\_costs, r, t | 2004 $ | system cost, cross-check (D10) | L190 |
+| `systemcost_ba` | sys\_costs, r, t | 2004 $ | annualized system cost (D44) | L188 |
 | `net_import_ann_rep` | r, t | MWh | net imports | L209 |
 | `net_import_ann_stress` (optional) | r, t | MWh | net imports in stress periods, check only | L210 |
 | `expenditure_flow` | type, r, rr, t | 2004 $ | trade money, cost view B | L77 |
