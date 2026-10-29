@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D40 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D41 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -55,7 +55,7 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 
 - **04a\_groups** — Aggregates every metric to the five groups, with the rule in the metrics table of `docs/data_dictionary.md`.
 - **04b\_diff** (D2, D11) — Diff (and % where D11 says) against the arm's own 0 GW case in the same batch.
-- **04c\_slopes** (D3) — Slopes on the shared levels only.
+- **04c\_slopes** (D41) — For each batch, arm, group and metric: the step slope between each pair of neighboring levels (Diff change per GW), on every level of the batch. No line or curve is fitted (D41).
 - **04d\_peak\_drilldown** (D14) — For each group peak block: one row per member region.
 - **04e\_neighbor\_table** — Price change for each neighbor of p25 (sanity check).
   - **You check:** Diff against level, one line per group, one panel per arm, one figure per batch (D26). Every value before 2044 is zero. Changes are smooth and mostly in one direction; anything else gets a written note.

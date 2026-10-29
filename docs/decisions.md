@@ -1,12 +1,12 @@
 # p25 nuclear study: decision log
 
-Forty decisions are settled (D1 to D40). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
+Forty-one decisions are settled (D1 to D41). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
 
 | ID | Decided | Decision | Source or reason |
 | --- | --- | --- | --- |
 | D1 | 2026-10-26 | All model claims use ReEDS commit `0c0ea27` (`ReEDS-Model/ReEDS`, your branch `ce/used`, no local edits). This replaces `730c582` (22 Oct). | Commit that made the current runs. |
 | D2 | 2026-10-22 | Compare only within an arm. Diff = case minus the arm's own 0 GW case. `nuccons` uses the `med` 0 GW case, if D4 passes. | Study design. |
-| D3 | 2026-10-22 | Slopes that compare arms use only 0, 0.5, 1.5, 2.5 GW. | Levels shared by all arms. |
+| D3 | 2026-10-22 | Slopes that compare arms use only 0, 0.5, 1.5, 2.5 GW. Replaced by D41. | Levels shared by all arms. |
 | D4 | 2026-10-22 | Trunk gate: each branch equals its trunk through 2041, in every file. `nuccons` 0.5 GW equals `med` 0.5 GW through 2041. A failure stops the pipeline. | Branches restart from the trunk at 2044. |
 | D5 | 2026-10-22 | `c66BA` is a reproducibility check only. | Clustering stops at 19 days. |
 | D6 | 2026-10-22 | Average price = sum of price times quantity / sum of `load` quantity, over blocks and regions. | `model_documentation.md` L3214-3226, L3807-3815; `reeds2.py` `pre_prices` L959. |
@@ -44,6 +44,7 @@ Forty decisions are settled (D1 to D40). Citations are for ReEDS commit `0c0ea27
 | D38 | 2026-10-29 | 03g (SMR value) and 03h (SMR cost gap, NVOE) are dropped for now and put On hold. The main analysis does not use them. 04f (forcing-cost curve) stays and is shown alone. Replaces the 03g/03h parts of D19 until Caleb takes them up again. | Caleb, 29 Oct. |
 | D39 | 2026-10-29 | The price-setter analysis (03e, 05c; D12, D37c) is On hold. The method is to be rethought after looking at the first figures. 03e and 05c are not built until a new decision replaces D12 and D37c. | Caleb, 29 Oct. |
 | D40 | 2026-10-29 | 00a checks the model code of every case. For each case, it compares the case's own copy of `reeds/core/terminus/report.gms`, `reeds/core/terminus/report_params.csv` and `reeds/core/setup/c_model.gms` with the same files at `0c0ea27` (`git show 0c0ea27:<path>` in the ReEDS source, D30). The check report lists, for each case and file, equal or different, with the first differing line. A difference is a FAIL: the pipeline stops, and Caleb decides if D1 and D30 still hold. INFERENCE: each case folder holds its own copy of the ReEDS code, because `reeds/io.py` L508 reads `report_params.csv` from `<case>/reeds/core/terminus/`. | Caleb, 29 Oct. Protects every model citation (D1, D30). |
+| D41 | 2026-10-29 | Slopes use every level of the batch: 13 levels in UON (0 to 3 GW, step 0.25), 7 in UOS (0 to 3 GW, step 0.5). Replaces D3. The change with level is not taken to be linear. 04c gives the step slope between each pair of neighboring levels (Diff change per GW), and the Diff against level for all levels, so curvature, kinks and steps are visible. No curve is fitted to the points. A fitted form, if any, needs a new decision after Caleb sees the first figures. Arms are compared within a batch only (D26). | Caleb, 29 Oct. Every arm in a batch has the same levels (D27); preliminary figures showed changes that are not linear. |
 
 ## On hold
 
