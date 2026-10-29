@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D39 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D40 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -22,9 +22,9 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 
 ### 00\_config: write down the study
 
-- **00a\_study** — Lists every case of UON and UOS (D25, D27): folder name, batch, arm, level, path to `<case>/outputs/outputs.h5`. Records the setup switches of every case from `inputs_case/switches.csv` (D30), the ReEDS source path and HEAD. Also lists the groups, the 34 zones, report years, dollar factor.
+- **00a\_study** — Lists every case of UON and UOS (D25, D27): folder name, batch, arm, level, path to `<case>/outputs/outputs.h5`. Records the setup switches of every case from `inputs_case/switches.csv` (D30), the ReEDS source path and HEAD. Compares each case's copy of `report.gms`, `report_params.csv` and `c_model.gms` with `0c0ea27` (D40). Also lists the groups, the 34 zones, report years, dollar factor.
   - In: `D:\ReEDS\runs` (path set once). Out: `study_cases`, `case_switches` and `region_groups` tables.
-  - **You check:** one table of all cases. Each batch and arm has the levels in the arm tables of `docs/data_dictionary.md`. No case is missing. Each case has `outputs/outputs.h5`. Setup switches match the data dictionary, except the arm switch.
+  - **You check:** one table of all cases. Each batch and arm has the levels in the arm tables of `docs/data_dictionary.md`. No case is missing. Each case has `outputs/outputs.h5`. Setup switches match the data dictionary, except the arm switch. Every case's model code equals `0c0ea27` (D40).
 
 ### 01\_ingest: copy raw files, change nothing
 

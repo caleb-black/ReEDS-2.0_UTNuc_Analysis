@@ -1,6 +1,6 @@
 # p25 nuclear study: decision log
 
-Thirty-nine decisions are settled (D1 to D39). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
+Forty decisions are settled (D1 to D40). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
 
 | ID | Decided | Decision | Source or reason |
 | --- | --- | --- | --- |
@@ -43,6 +43,7 @@ Thirty-nine decisions are settled (D1 to D39). Citations are for ReEDS commit `0
 | D37 | 2026-10-29 | Stage 03 choices. (a) Peaks (D9): 2nd and 3rd are the next distinct prices; each row also gives the number of blocks at that price. (b) p19: values kept; the peak/average ratio is left blank where the average price is <= 0. (c) 03e price-setter (D12): a tech is running if `gen_h` >= 1 MW in the block; running cost = `cost_vom` + `heat_rate` x `fuel_price`, each weighted over vintages by capacity; techs with no `cost_vom` row have VOM 0; techs with a heat rate but no `fuel_price` row cannot set the price; gap = (price - running cost) / price; blocks with price <= 0 are "set by something else"; storage and imports are never price-setters; `fuel_price` is taken as 2004 $. (d) 03f: a missing `tran_util_h_rep` row is 0; a line is at limit at >= 99% of capacity. (e) 03i is not built; the forcing cost comes from 04f and 03j. Caleb's own plot shows no significant change in the prescription dual across levels. (f) 03c does not copy `net_import_ann_rep` or `invtran_out`; later stages read the stage 01 files. (g) Technology groups and colors follow ReEDS: `postprocessing/bokehpivot/in/reeds2/tech_map.csv` and `tech_style.csv` at `0c0ea27`. | Caleb, 29 Oct. |
 | D38 | 2026-10-29 | 03g (SMR value) and 03h (SMR cost gap, NVOE) are dropped for now and put On hold. The main analysis does not use them. 04f (forcing-cost curve) stays and is shown alone. Replaces the 03g/03h parts of D19 until Caleb takes them up again. | Caleb, 29 Oct. |
 | D39 | 2026-10-29 | The price-setter analysis (03e, 05c; D12, D37c) is On hold. The method is to be rethought after looking at the first figures. 03e and 05c are not built until a new decision replaces D12 and D37c. | Caleb, 29 Oct. |
+| D40 | 2026-10-29 | 00a checks the model code of every case. For each case, it compares the case's own copy of `reeds/core/terminus/report.gms`, `reeds/core/terminus/report_params.csv` and `reeds/core/setup/c_model.gms` with the same files at `0c0ea27` (`git show 0c0ea27:<path>` in the ReEDS source, D30). The check report lists, for each case and file, equal or different, with the first differing line. A difference is a FAIL: the pipeline stops, and Caleb decides if D1 and D30 still hold. INFERENCE: each case folder holds its own copy of the ReEDS code, because `reeds/io.py` L508 reads `report_params.csv` from `<case>/reeds/core/terminus/`. | Caleb, 29 Oct. Protects every model citation (D1, D30). |
 
 ## On hold
 
