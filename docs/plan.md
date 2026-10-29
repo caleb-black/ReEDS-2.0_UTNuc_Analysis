@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D41 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D42 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -51,9 +51,19 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 - **03f\_line\_use** (D9, D37d) — Line use in each peak block, from `tran_util_h_rep`.
   - **You check:** a map of average price for the 0 GW `ref` case of each batch. Compare it by eye with the bokehpivot "Energy Price Final BA Map" of the same run. Also the plot of all price gaps from 03e.
 
+### 04s\_screen: rough first look (before 04a)
+
+A fast, rough pass over the stage 03 outputs. Its only job is to show which metrics change with the nuclear level, so the full stage 04 and 05 work is done only for those (D42).
+
+- **04s\_screen** — One script. For each batch, arm, group and post-plant year: the Diff against the 0 GW case, for every stage 03 metric. Groups are simple sums over member regions (prices: sum of dollars / sum of `load`, as D6). No peak drill-down, no price-setter, no line detail.
+  - Out: one table (metric, batch, arm, group, year, level, Diff, % of 0 GW value) and one figure grid per batch (rows = metric, columns = group, one line per arm, Diff against level).
+  - Marks a metric "moves" if, in any group and post-plant year, its Diff at 3 GW is more than 1% of the 0 GW value, or the step slopes change sign (D41). Otherwise "flat".
+  - **You check:** the figure grid. For each metric, you choose: go on (full 04 and 05 work), or put on hold. Write your choice as one decision entry.
+- **Lighter rules for 04s only:** no Verifier, no Reviewer, no citations. One Builder session. The check report is the figure grid and the table. Results from 04s are never reported as findings; they only choose the work.
+
 ### 04\_analyze: groups and differences
 
-- **04a\_groups** — Aggregates every metric to the five groups, with the rule in the metrics table of `docs/data_dictionary.md`.
+- **04a\_groups** — Only for the metrics that 04s marked to go on (D42). Aggregates every metric to the five groups, with the rule in the metrics table of `docs/data_dictionary.md`.
 - **04b\_diff** (D2, D11) — Diff (and % where D11 says) against the arm's own 0 GW case in the same batch.
 - **04c\_slopes** (D41) — For each batch, arm, group and metric: the step slope between each pair of neighboring levels (Diff change per GW), on every level of the batch. No line or curve is fitted (D41).
 - **04d\_peak\_drilldown** (D14) — For each group peak block: one row per member region.

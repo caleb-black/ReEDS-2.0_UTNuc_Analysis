@@ -1,6 +1,6 @@
 # p25 nuclear study: decision log
 
-Forty-one decisions are settled (D1 to D41). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
+Forty-two decisions are settled (D1 to D42). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
 
 | ID | Decided | Decision | Source or reason |
 | --- | --- | --- | --- |
@@ -45,6 +45,7 @@ Forty-one decisions are settled (D1 to D41). Citations are for ReEDS commit `0c0
 | D39 | 2026-10-29 | The price-setter analysis (03e, 05c; D12, D37c) is On hold. The method is to be rethought after looking at the first figures. 03e and 05c are not built until a new decision replaces D12 and D37c. | Caleb, 29 Oct. |
 | D40 | 2026-10-29 | 00a checks the model code of every case. For each case, it compares the case's own copy of `reeds/core/terminus/report.gms`, `reeds/core/terminus/report_params.csv` and `reeds/core/setup/c_model.gms` with the same files at `0c0ea27` (`git show 0c0ea27:<path>` in the ReEDS source, D30). The check report lists, for each case and file, equal or different, with the first differing line. A difference is a FAIL: the pipeline stops, and Caleb decides if D1 and D30 still hold. INFERENCE: each case folder holds its own copy of the ReEDS code, because `reeds/io.py` L508 reads `report_params.csv` from `<case>/reeds/core/terminus/`. | Caleb, 29 Oct. Protects every model citation (D1, D30). |
 | D41 | 2026-10-29 | Slopes use every level of the batch: 13 levels in UON (0 to 3 GW, step 0.25), 7 in UOS (0 to 3 GW, step 0.5). Replaces D3. The change with level is not taken to be linear. 04c gives the step slope between each pair of neighboring levels (Diff change per GW), and the Diff against level for all levels, so curvature, kinks and steps are visible. No curve is fitted to the points. A fitted form, if any, needs a new decision after Caleb sees the first figures. Arms are compared within a batch only (D26). | Caleb, 29 Oct. Every arm in a batch has the same levels (D27); preliminary figures showed changes that are not linear. |
+| D42 | 2026-10-29 | Add 04s\_screen, a rough first look before 04a. It computes the Diff against level for every stage 03 metric, per batch, arm, group and post-plant year, with simple sums over regions. A metric "moves" if its Diff at 3 GW is more than 1% of the 0 GW value in any group and year, or its step slopes change sign; else "flat". Caleb then picks, per metric, go on or on hold; only go-on metrics get the full 04 and 05 work (for example 04d peak drill-down only if the peak moves). 04s has no Verifier, no Reviewer and no citations; its numbers are never reported as findings. | Caleb, 29 Oct. Saves time and credits on details that show no behavior. |
 
 ## On hold
 
