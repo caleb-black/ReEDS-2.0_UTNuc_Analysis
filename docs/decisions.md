@@ -1,6 +1,6 @@
 # p25 nuclear study: decision log
 
-Thirty-eight decisions are settled (D1 to D38). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
+Thirty-nine decisions are settled (D1 to D39). Citations are for ReEDS commit `0c0ea27`. Do not change a decision in code. Add a new entry instead.
 
 | ID | Decided | Decision | Source or reason |
 | --- | --- | --- | --- |
@@ -42,6 +42,7 @@ Thirty-eight decisions are settled (D1 to D38). Citations are for ReEDS commit `
 | D36 | 2026-10-29 | No duplicate tables, units by lookup. The stage 01 files (one per output key, `outputs/01_ingest/`) are the model data for all later stages; later stages read only the keys they need, filtered on read. ReEDS column names (`t`, `Value`, `h` and so on) are kept. 02d writes only a units lookup table (key, type where units differ by type, unit; from `docs/data_dictionary.md`, "not stated" where it has none). Later stages join it when they need a unit. Tables made in stage 03 and later stay long. Replaces the renames and the `unit` column in D33 and D35c, and the `year`/`value`/`unit` columns in plan rule 3 for model data. | Caleb, 29 Oct. Avoids a ~430 MB copy of the 01 data. |
 | D37 | 2026-10-29 | Stage 03 choices. (a) Peaks (D9): 2nd and 3rd are the next distinct prices; each row also gives the number of blocks at that price. (b) p19: values kept; the peak/average ratio is left blank where the average price is <= 0. (c) 03e price-setter (D12): a tech is running if `gen_h` >= 1 MW in the block; running cost = `cost_vom` + `heat_rate` x `fuel_price`, each weighted over vintages by capacity; techs with no `cost_vom` row have VOM 0; techs with a heat rate but no `fuel_price` row cannot set the price; gap = (price - running cost) / price; blocks with price <= 0 are "set by something else"; storage and imports are never price-setters; `fuel_price` is taken as 2004 $. (d) 03f: a missing `tran_util_h_rep` row is 0; a line is at limit at >= 99% of capacity. (e) 03i is not built; the forcing cost comes from 04f and 03j. Caleb's own plot shows no significant change in the prescription dual across levels. (f) 03c does not copy `net_import_ann_rep` or `invtran_out`; later stages read the stage 01 files. (g) Technology groups and colors follow ReEDS: `postprocessing/bokehpivot/in/reeds2/tech_map.csv` and `tech_style.csv` at `0c0ea27`. | Caleb, 29 Oct. |
 | D38 | 2026-10-29 | 03g (SMR value) and 03h (SMR cost gap, NVOE) are dropped for now and put On hold. The main analysis does not use them. 04f (forcing-cost curve) stays and is shown alone. Replaces the 03g/03h parts of D19 until Caleb takes them up again. | Caleb, 29 Oct. |
+| D39 | 2026-10-29 | The price-setter analysis (03e, 05c; D12, D37c) is On hold. The method is to be rethought after looking at the first figures. 03e and 05c are not built until a new decision replaces D12 and D37c. | Caleb, 29 Oct. |
 
 ## On hold
 
@@ -52,3 +53,4 @@ Thirty-eight decisions are settled (D1 to D38). Citations are for ReEDS commit `
 ## Removed scripts
 
 None. No earlier scripts are reused (D16). When a script is moved to `archive/` or deleted, record here what it did and where that job now lives.
+- Price-setter analysis (03e, 05c; D39). Method to be rethought by Caleb after the first figures (29 Oct). Rules used so far are in D12 and D37c.
