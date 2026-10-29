@@ -7,7 +7,7 @@ For each arm and group (wecc and the four others): the step slope of the D44
 annualized system cost Diff (03b2, 2024 $) between each pair of neighboring
 levels, (Diff(l2) - Diff(l1)) / (l2 - l1), in 2024 $ per GW of prescribed
 nuclear. For the 2044-2050 total (undiscounted sum, D44) and for each year
-2044 to 2050; capital and operations parts too. INFERENCE (plan, 04f): the
+2044 to 2050; capital and operations parts too (D46i). INFERENCE (plan, 04f): the
 finite difference between levels is the average of the shadow price over the
 step (`model_documentation.md` L3214-3220 at 0c0ea27, as cited in the plan).
 This is a proxy only; the prescription dual itself is not read here (03j).
@@ -113,7 +113,10 @@ def main():
     t = [f"## 04f_forcing_cost_curve, {batch}", "",
          f"- Table: `{ac.rel(path)}` ({len(fc):,} rows: arm x group x metric (total, capital, op) "
          "x year (2044..2050, 2044-2050) x step).",
-         f"- Check figure: `{ac.rel(fig)}`.", "",
+         f"- Check figure: `{ac.rel(fig)}`.",
+         "- The forcing cost is reported for the total (annualized_cost) and, alongside it, "
+         "for capital only (annualized_cost_capital) and operations only "
+         "(annualized_cost_op) (D46i). The figure and the table below show the total.", "",
          "| check | result | detail |", "| --- | --- | --- |"]
     t += [f"| {nm} | {'PASS' if ok else 'FAIL'} | {det} |" for nm, ok, det in checks]
     t += ["", "wecc, annualized cost, 2044-2050 total: step change per GW, billion 2024 $ per GW "

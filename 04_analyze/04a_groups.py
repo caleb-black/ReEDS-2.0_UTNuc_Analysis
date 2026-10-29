@@ -15,10 +15,10 @@ Metrics (D43a, D44):
 - net_imports (MWh, `net_import_ann_rep`) and new_lines (MW, `invtran_out`),
   read from the stage 01 files (D36, D37f), all solve years.
 - n_lines_at_limit_peak (focus only) and the per-line table: line use in p25's
-  rank-1 peak block(s), per line touching p25 (03f line_use_peak).
+  rank-1 peak block(s), per line touching p25 (03f line_use_peak; D46b, D46c).
 Components (load_quant, energy_dollars, allin_dollars, peak_energy_price with
 its block names) are kept with status "component" so the group values can be
-recomputed; they are not diffed. Peak price alone is on hold (D43a).
+recomputed; they are not diffed. Peak price alone is on hold (D43a, D46e).
 
 The rules are in analyze_common.py (shared with 04b, 04c, 04f; plan rule 2).
 
@@ -125,7 +125,13 @@ def main():
          f"region, from 03a): {len(allin_ns):,} of {int((df['metric'] == 'avg_allin_price').sum()):,}"
          f" ({', '.join(sorted(allin_ns['group'].unique())) or 'none'}).",
          f"- p25 peak block ties (rank-1 blocks per case-year): "
-         f"{ties.value_counts().sort_index().to_dict()}.", "",
+         f"{ties.value_counts().sort_index().to_dict()}; per line direction: highest "
+         "utilization over the tied blocks, number of tied blocks at limit, at limit in any (D46b).",
+         "- Zero-fill (D46h): a case-group-year with no stage 01 row for any member is 0. "
+         + "; ".join(f"{m}: {int(df.loc[df['metric'] == m, 'n_missing_filled'].sum()):,} of "
+                     f"{int((df['metric'] == m).sum()):,} group rows filled"
+                     for m in ("net_imports", "new_lines"))
+         + " (missing member rows inside a group that has other rows count as 0 in the sum).", "",
          "| check | result | detail |", "| --- | --- | --- |"]
     t += [f"| {r['check']} | {r['result']} | {r['detail']} |" for r in checks]
     t += ["", "Rows per metric:", "", ac.md_table(cnt.reset_index()), ""]

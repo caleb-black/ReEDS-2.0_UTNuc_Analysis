@@ -8,7 +8,7 @@ energy and all-in price, and system cost (annualized D44, and the D10
 cross-check). Absolute only: peak/average ratio, net imports, new lines, line
 use. The % is 100 x Diff / |0 GW value| and is left blank where |0 GW value| is
 below a floor: 1 2024 $/MWh for prices, 1e6 2024 $ for costs (analyze_common.
-PCT_FLOOR; a choice for Caleb, not in decisions.md).
+PCT_FLOOR; D46a).
 
 The group values are rebuilt in memory with analyze_common (the 04a rules);
 this script does not read 04a's file (plan rule 2).
@@ -146,7 +146,7 @@ def main():
          f"- Group Diff table: `{ac.rel(p1)}` ({len(d):,} rows).",
          f"- p25 line Diff table: `{ac.rel(p2)}` ({len(ld):,} rows; "
          f"{lpost_miss} rows with no 0 GW row for that line direction).",
-         "- % rule (choice for Caleb): % = 100 x Diff / |0 GW value|, only for the D11 metrics "
+         "- % rule (D46a): % = 100 x Diff / |0 GW value|, only for the D11 metrics "
          "(average energy and all-in price, annualized cost, D10 cross-check cost); blank where "
          f"|0 GW value| < {ac.PCT_FLOOR['price']:g} 2024 $/MWh (prices) or < "
          f"{ac.PCT_FLOOR['cost']:g} 2024 $ (costs).",

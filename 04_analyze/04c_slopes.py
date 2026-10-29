@@ -8,7 +8,7 @@ neighboring levels, (Diff at the higher level - Diff at the lower level) /
 curve is fitted (D41). Diff is the 04b Diff, rebuilt in memory with
 analyze_common (plan rule 2). Same metrics as 04b (components are not used).
 
-Shape notes (for the written notes in the check report, nothing is explained):
+Shape notes (D46f; for the written notes in the check report, nothing is explained):
 - direction change: the sign of the step slope changes between steps (steps
   with |slope| <= 1e-6 x the series' largest |slope| count as flat and are
   skipped);

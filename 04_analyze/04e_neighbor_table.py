@@ -6,7 +6,7 @@ For each of the 9 neighbors of p25 (00_config/region_groups.csv, group
 `neighbors`; D35a), every arm, level and solve year: the region's average
 energy price and average all-in price (03a prices_region, 2024 $/MWh, D6), the
 Diff against the same arm's 0 GW case (D2), and the % of the 0 GW value (D11;
-blank below the analyze_common.PCT_FLOOR floor, a choice for Caleb).
+blank below the analyze_common.PCT_FLOOR floor, D46a).
 
 Check: every Diff before 2044 is 0.
 

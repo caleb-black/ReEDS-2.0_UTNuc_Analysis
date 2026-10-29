@@ -20,10 +20,12 @@ Rules used (docs/decisions.md, docs/data_dictionary.md "Metrics"):
   the 2044-2050 total. D10 cost (03b): same sums, secondary cross-check only.
 - Net imports (`net_import_ann_rep`, MWh): sum over members (data dictionary).
 - New lines (`invtran_out`, MW): sum over lines with r or rr in the group
-  ("Sum over lines touching the group"); a line inside the group counts once.
+  ("Sum over lines touching the group"); a line inside the group counts once,
+  wecc counts all lines (D46d).
 - Line at limit in the peak block: per line touching p25 (data dictionary), in
   p25's rank-1 peak block(s) from 03f line_use_peak.
-- Missing rows in summed stage 01 metrics are 0.
+- Missing rows in summed stage 01 metrics (net imports, new lines) are 0; the
+  count is in n_missing_filled and in the 04a report.
 - Diff = case minus the same batch-arm's 0 GW case, same group and year (D2).
   % only for D11 metrics (prices, system cost); see PCT_FLOOR.
 """
@@ -50,12 +52,12 @@ REPORT_TITLE = "# Check report: 04_analyze\n\n"
 GROUPS = ["focus", "utah_rest", "neighbors", "rest_wecc", "wecc"]
 FOCUS = "p25"
 FIRST_POST_YEAR = 2044
-TOTAL_T = "2044-2050"            # annualized cost: undiscounted sum of 7 years (D44)
-D10_TOTAL_T = "2044+2047+2050"   # D10 cross-check: sum of the 3 solve years (D10)
+TOTAL_T = "2044-2050"            # annualized cost: undiscounted sum of 7 years (D44, D46g)
+D10_TOTAL_T = "2044+2047+2050"   # D10 cross-check: sum of the 3 solve years (D10, D46g)
 ID = ["batch", "arm", "level", "case"]
 
 # % (D11) is computed only for these metrics, and left blank where |0 GW value|
-# is below the floor for the metric's unit. CHOICE FOR CALEB (not in decisions.md).
+# is below the floor for the metric's unit (D46a).
 PCT_METRICS = {"avg_energy_price", "avg_allin_price",
                "annualized_cost", "annualized_cost_capital", "annualized_cost_op",
                "d10_system_cost", "d10_system_cost_inv", "d10_system_cost_op"}
@@ -64,7 +66,7 @@ PCT_FLOOR = {"price": 1.0,       # 2024 $/MWh
 
 PRIMARY = "primary"
 XCHECK = "secondary cross-check (D10), not the system cost result"
-COMPONENT = "component (not diffed)"
+COMPONENT = "component (not diffed, D46e)"
 
 SETTINGS = dc.SETTINGS
 SOLVE_YEARS = [int(x) for x in SETTINGS["solve_years"].split()]
@@ -253,7 +255,7 @@ def p25_lines(batch):
 
     With tied peak blocks (n_blocks_at_price > 1), the row gives the largest
     utilization over the tied blocks, the number of tied blocks at limit, and
-    at_limit_any. CHOICE FOR CALEB (tie rule not in decisions.md).
+    at_limit_any (D46b).
     """
     l = pd.read_hdf(IN03 / "line_use_peak.h5", "data",
                     where=f'batch == "{batch}" & peak_r == "{FOCUS}" & peak_rank == 1',
@@ -276,7 +278,7 @@ def focus_lines_at_limit(lines, batch):
     s["value"] = s["value"].astype(float)
     s["group"], s["metric"] = "focus", "n_lines_at_limit_peak"
     s["unit"] = "count of line directions touching p25 at limit in p25's peak block"
-    s["status"] = PRIMARY + " (line summary, focus only)"
+    s["status"] = PRIMARY + " (line summary, focus only, D46c)"
     s["detail"] = ""
     return s
 
@@ -343,7 +345,7 @@ def shape_notes(sl, keys, rel_tol=1e-6):
     """Per series: direction changes (step-slope sign changes) and the largest kink.
 
     Steps with |slope| <= rel_tol x max|slope| of the series are treated as flat
-    and skipped for the sign test. kink = largest |change between consecutive
+    and skipped for the sign test (D46f). kink = largest |change between consecutive
     step slopes| / max|slope|. For the written notes only; nothing is explained.
     """
     rows = []
