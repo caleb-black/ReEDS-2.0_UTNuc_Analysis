@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D38 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D39 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -47,7 +47,7 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 - **03b\_system\_cost** (D10) — Sum of `inv_*` and `op_*` from `systemcost_ba_bulk_ew` for 2044, 2047, 2050.
 - **03c\_trade** — Expenditure flows by type. Net imports and new lines are read from the stage 01 files, not copied (D37f).
 - **03d\_capacity\_generation** — Capacity and generation by technology, with share of the regional total.
-- **03e\_price\_setter** (D12) — Per block: highest running cost of the techs that run; gap to the price; price-setter or "set by something else". Rules in D37c.
+- **03e\_price\_setter** — On hold (D39); method to be rethought. Previous intent (D12, D37c): per block: highest running cost of the techs that run; gap to the price; price-setter or "set by something else". Rules in D37c.
 - **03f\_line\_use** (D9, D37d) — Line use in each peak block, from `tran_util_h_rep`.
   - **You check:** a map of average price for the 0 GW `ref` case of each batch. Compare it by eye with the bokehpivot "Energy Price Final BA Map" of the same run. Also the plot of all price gaps from 03e.
 
@@ -64,7 +64,7 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 
 - **05a\_group\_figures** — Primary results per group: price, peak, ratio, cost.
 - **05b\_region\_maps** (D15) — Maps of average price, Diff in price, Diff in system cost; `expenditure_flow` map next to the cost map. Shapes from `inputs/shapefiles/US_PCA/` (merge p28 and p30 into z28).
-- **05c\_price\_setter\_figures** — Share of blocks per price-setter type, by level. Tech groups and colors from ReEDS `tech_map.csv` and `tech_style.csv` (D37g), in all figures.
+- **05c\_price\_setter\_figures** — On hold with 03e (D39). Previous intent: share of blocks per price-setter type, by level. Tech groups and colors from ReEDS `tech_map.csv` and `tech_style.csv` (D37g), in all figures.
 - **05d\_wide\_tables** — One wide CSV per metric and batch: arm, region or group, year, value per level, Diff per level.
   - **You check:** each figure has a one-line statement under it that you agree with.
 
