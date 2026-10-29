@@ -24,7 +24,7 @@ Per case, group (00_config/region_groups.csv, 9 neighbors, D35), block h, year t
 
 Joins. Each quantity row takes the price of the same (type, subtype, r, h, t);
 a quantity row with no price row gets price 0, as `pre_prices` does
-(`reeds2.py` L965-L966: left join on quantities, `fillna(0)`). Counts of such
+(`reeds2.py` L964-L965: left join on quantities, `fillna(0)`). Counts of such
 rows are in the report. Price rows with no quantity row add nothing.
 
 Dollars (plan rule 6, D8): every dollar or $/MWh value is multiplied by the
@@ -326,7 +326,7 @@ def main():
          f"{int(info.r_t_load_quant_le0.sum())}"),
         ("Group blocks with group load <= 0", "PASS" if info.group_blocks_quant_le0.sum() == 0 else "OPEN",
          f"{int(info.group_blocks_quant_le0.sum())}"),
-        ("`load` quantity rows with no price row (price set to 0, reeds2.py L965-L966)",
+        ("`load` quantity rows with no price row (price set to 0, reeds2.py L964-L965)",
          "INFO", f"{int(info.no_price_load.sum())} rows in all cases"),
         ("Negative `load` prices (kept as they are)", "INFO",
          f"{int(info.load_price_lt0.sum())} block rows in all cases"),
@@ -386,7 +386,7 @@ def main():
         "3rd, block name and hours; ratio = peak / energy-only average), D14 (group price per "
         "block), D32 (each case its own blocks and numhours). All-in types: `price_types` in "
         "`reeds2.py` L34 at 0c0ea27 (load, res_marg, oper_res, state_rps, nat_gen); join as "
-        "`pre_prices` L959-L979 (left join on quantities, missing price = 0, L965-L966).\n",
+        "`pre_prices` L959-L979 (left join on quantities, missing price = 0, L964-L965).\n",
         f"Tables: `{dc.rel(p_reg)}` ({len(reg_all):,} rows), `{dc.rel(p_grp)}` "
         f"({len(grp_all):,} rows), per-case counts `outputs/03_derive/03a_case_checks.csv`. "
         f"Run time {time.time() - t0:.0f} s.\n",

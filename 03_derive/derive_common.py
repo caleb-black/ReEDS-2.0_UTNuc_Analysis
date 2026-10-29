@@ -111,7 +111,7 @@ def _git_show(path):
 def tech_map():
     """ReEDS tech_map.csv at 0c0ea27 (D37g), as (compiled regex, display) pairs.
 
-    Applied as bokehpivot does (`reeds_bokeh.py` L414-L431 at 0c0ea27):
+    Applied as bokehpivot does (`reeds_bokeh.py` L414-L432 at 0c0ea27):
     lowercase value, '^raw$' with '*' -> '.*', first match wins, no match keeps
     the original name.
     """
