@@ -2,7 +2,7 @@
 
 Oct 28, 2026 · Caleb
 
-This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D43 are in `docs/decisions.md`. This plan does not repeat them.
+This plan tells Claude Code what to build, stage by stage. Definitions are in `docs/data_dictionary.md`. Decisions D1 to D44 are in `docs/decisions.md`. This plan does not repeat them.
 
 ## Rules for every stage
 
@@ -29,7 +29,7 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 ### 01\_ingest: copy raw files, change nothing
 
 - **01a\_load\_outputs** — Reads each key in "Outputs read from each run" from `outputs.h5` for every case (D29). Renames the `*` columns by position (type, subtype, r, h, t) and `allh` to `h` (D33). Adds batch, arm, level, case. Lists absent keys (an absent key is an empty table).
-- **01b\_load\_inputs** — Reads `inputs_case/rep/numhours.csv` for every case. Checks the block count per arm: 152, or 144 in `loadhigh` and `loadlow` (D32). (`cost_vom`, `heat_rate`, `fuel_price` are `outputs.h5` keys, read in 01a.)
+- **01b\_load\_inputs** — Reads `inputs_case/rep/numhours.csv` for every case. Checks the block count per arm: 152, or 144 in `loadhigh` and `loadlow` (D32). Also reads `crf` (t, value) for every case from `inputs_case/inputs.h5`, or `inputs_case/crf.csv` if absent, as `reeds/io.py` `read_input` does (L440-460 at `0c0ea27`), for 03b2 (D44). (`cost_vom`, `heat_rate`, `fuel_price` are `outputs.h5` keys, read in 01a.)
   - Out: one long table per output key, with UON and UOS rows kept apart by `batch` (D26). HDFStore table format, one file per key (D33). Keeps `t`, `Value` and model units.
   - **You check:** row count per case per file. Cases of one arm have similar counts. A missing file is listed by name.
 
@@ -44,7 +44,9 @@ There are six stages. The gate that can stop the work (neighbor list) is in stag
 ### 03\_derive: one value per region, year, case
 
 - **03a\_prices** (D6, D9) — Per region and year: average energy price, average all-in price, peak price with block name and hours, 2nd and 3rd peaks, peak/average ratio. Also the group price per block (D14).
-- **03b\_system\_cost** (D10) — Sum of `inv_*` and `op_*` from `systemcost_ba_bulk_ew` for 2044, 2047, 2050.
+- **03b\_system\_cost** (D10) — Secondary cross-check (D44). Sum of `inv_*` and `op_*` from `systemcost_ba_bulk_ew` for 2044, 2047, 2050.
+- **03b2\_annualized\_cost** (D44) — Primary system cost. From `systemcost_ba` and the case's own `crf` (`inputs_case`), following `reeds/results.py` `calc_systemcost` L371-474 at `0c0ea27`: (1) split `inv_*` (capital) from `op_*` (operations); (2) each solve year's capital × that year's `crf` / 1.02, paid every year from the build year for 30 years, or 40 for the transmission categories (`inv_converter_costs`, `inv_transmission_*`); (3) operations of each solve year fill the years up to the next solve year; (4) per region and year 2044 to 2050: capital payments + operations, in 2024 $ (D8); also the undiscounted 2044 to 2050 total per region. Capital built before 2010 (`df_capex_init`, which ReEDS adds by default) is left out; INFERENCE: it is the same in every case of a batch and cancels in Diff.
+  - **You check:** for one case, the national values against `outputs/post_systemcost_annualized.csv` of that run, rescaled from its `deflator.csv` dollar year to D8. They should agree within the dollar-factor difference and the pre-2010 capital that ReEDS adds.
 - **03c\_trade** — Expenditure flows by type. Net imports and new lines are read from the stage 01 files, not copied (D37f).
 - **03d\_capacity\_generation** — Capacity and generation by technology, with share of the regional total.
 - **03e\_price\_setter** — On hold (D39); method to be rethought. Previous intent (D12, D37c): per block: highest running cost of the techs that run; gap to the price; price-setter or "set by something else". Rules in D37c.
@@ -63,7 +65,7 @@ A fast, rough pass over the stage 03 outputs. Its only job is to show which metr
 
 ### 04\_analyze: groups and differences
 
-- **04a\_groups** — Only for the go-on metrics in D43 (system cost waits for the annualization decision, D43b). Full work on UON; UOS only as a check of UON claims (D43d). Aggregates every metric to the five groups, with the rule in the metrics table of `docs/data_dictionary.md`.
+- **04a\_groups** — Only for the go-on metrics in D43 (system cost uses the annualized cost of 03b2, D44). Full work on UON; UOS only as a check of UON claims (D43d). Aggregates every metric to the five groups, with the rule in the metrics table of `docs/data_dictionary.md`.
 - **04b\_diff** (D2, D11) — Diff (and % where D11 says) against the arm's own 0 GW case in the same batch.
 - **04c\_slopes** (D41) — For each batch, arm, group and metric: the step slope between each pair of neighboring levels (Diff change per GW), on every level of the batch. No line or curve is fitted (D41).
 - **04d\_peak\_drilldown** (D14) — For each group peak block: one row per member region.
@@ -161,6 +163,8 @@ The working rules from this plan are also in `CLAUDE.md` (source of truth, scena
 - [x] Decided (D18): Python with the conda `reeds` environment from `environment.yml` at `0c0ea27`, without the GAMS packages (`gamsapi`, `gamspy_base`). Note: reading any GDX file (`gdxpds`) needs the GAMS API. So with no GAMS, the scripts do not read GDX files. Outputs are read from `outputs.h5` with `h5py` (D29).
 - [x] Checked: `inputs/shapefiles/US_PCA/` has shapes for `p28` and `p30`, and none for `z28`. So 05b must merge the two shapes into `z28`.
 - [x] Done: units of `cost_vom`, `heat_rate`, `fuel_price` are in the data dictionary (`b_inputs.gms` at `0c0ea27`).
-- [ ] **Open (Caleb, later):** branch converter costs before 2044 differ from the trunk (see `docs/decisions.md`, On hold).
+- [ ] **Open (Caleb, later):** branch converter costs before 2044 differ from the trunk (see `docs/decisions.md`, On hold). Under D44 they carry into 2044 to 2050 through the 40-year payments, so the Diff is no longer zero there.
+- [ ] **Open (Caleb):** 04f uses the D10 system cost. Decide whether it moves to the D44 annualized cost.
+- [ ] **Open (Caleb):** confirm `inputs_case/inputs.h5` (or `crf.csv`) is collected for every case, for 03b2 (`reeds/io.py` `read_input` L440-460 at `0c0ea27`).
 - [x] Decided (27 Oct): Caleb adds the marginal of `eq_forceprescription_power` as an output file when collecting the files. Add a script **03j\_prescription\_dual** that reads it for `Nuclear-SMR` in p25 in 2044. Keep 04f (forcing-cost curve) as a cross-check against it. Columns, units and sign: check when the file arrives.
 - [x] Decided (D19): the SMR net value uses `lcoe_built`. Add `lcoe_built.csv` to the files to collect.
