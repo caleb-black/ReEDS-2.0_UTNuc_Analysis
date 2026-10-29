@@ -42,6 +42,7 @@ NOT_STATED = "not stated"
 # Units as docs/data_dictionary.md states them (one unit per key).
 KEY_UNITS = {
     "systemcost_ba_bulk_ew": "2004 $",
+    "systemcost_ba": "2004 $",          # data_dictionary.md (D44 update)
     "net_import_ann_rep": "MWh",
     "net_import_ann_stress": "MWh",
     "expenditure_flow": "2004 $",

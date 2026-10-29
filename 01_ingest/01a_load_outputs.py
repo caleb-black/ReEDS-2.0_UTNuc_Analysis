@@ -31,9 +31,22 @@ Check report section "01a" in outputs/checks/01_ingest.md (D24).
 
 A failed check makes the script exit with code 1 (plan rule 5).
 
+Which keys are read (the default is unchanged: every key of the table):
+  (no option)      every key in KEYS; all tables are rewritten.
+  --keys K [K ...] only the named keys; their tables are rewritten.
+  --missing        only the keys with no table in outputs/01_ingest/outputs/
+                   or no rows in row_counts_outputs.csv.
+With --keys or --missing, the tables, row counts and column lists of the other
+keys are kept from the earlier run (not re-read); the counts and columns files
+are merged, and the checks and the report cover every key. The NaN check and
+the same-columns check cover only the keys read in this run (the report says
+so). The other keys must already have a table, else the script stops.
+
 Run:  conda run -n reeds python 01_ingest/01a_load_outputs.py
+      conda run -n reeds python 01_ingest/01a_load_outputs.py --keys systemcost_ba
 """
 
+import argparse
 import re
 import sys
 import time
@@ -64,6 +77,7 @@ KEYS = {
     "reqt_price": ["type", "subtype", "r", "h", "t"],
     "reqt_quant": ["type", "subtype", "r", "h", "t"],
     "systemcost_ba_bulk_ew": ["sys_costs", "r", "t"],
+    "systemcost_ba": ["sys_costs", "r", "t"],       # D44; report_params.csv L188
     "net_import_ann_rep": ["r", "t"],
     "net_import_ann_stress": ["r", "t"],            # optional
     "expenditure_flow": ["type", "r", "rr", "t"],
@@ -186,6 +200,56 @@ def rename_map(key, file_cols):
 
 
 # ---------------------------------------------------------------------------
+# 0. Which keys this run reads (default: all; see the docstring)
+# ---------------------------------------------------------------------------
+ap = argparse.ArgumentParser(description="01a: load model outputs (D29, D33)")
+g_sel = ap.add_mutually_exclusive_group()
+g_sel.add_argument("--keys", nargs="+", metavar="KEY",
+                   help="read only these keys (names from KEYS)")
+g_sel.add_argument("--missing", action="store_true",
+                   help="read only keys with no table or no row counts yet")
+args = ap.parse_args()
+
+COUNTS_CSV = OUT_DIR / "row_counts_outputs.csv"
+COLUMNS_CSV = OUT_DIR / "columns_found.csv"
+old_counts = pd.read_csv(COUNTS_CSV) if COUNTS_CSV.is_file() else None
+old_columns = pd.read_csv(COLUMNS_CSV) if COLUMNS_CSV.is_file() else None
+if args.keys:
+    unknown = [k for k in args.keys if k not in KEYS]
+    if unknown:
+        raise SystemExit(f"STOP: unknown key(s) {unknown}; keys are those of the "
+                         "data dictionary table (KEYS).")
+    SEL = [k for k in KEYS if k in args.keys]
+elif args.missing:
+    known = set(old_counts["key"]) if old_counts is not None else set()
+    SEL = [k for k in KEYS
+           if not (TABLE_DIR / f"{k}.h5").is_file() or k not in known]
+else:
+    SEL = list(KEYS)
+PARTIAL = len(SEL) < len(KEYS)
+KEPT = [k for k in KEYS if k not in SEL]
+if PARTIAL:
+    no_table = [k for k in KEPT if not (TABLE_DIR / f"{k}.h5").is_file()]
+    no_count = [k for k in KEPT
+                if old_counts is None or k not in set(old_counts["key"])]
+    no_cols = [k for k in KEPT
+               if old_columns is None or k not in set(old_columns["key"])]
+    if no_table or no_count:
+        raise SystemExit("STOP: a partial run keeps the other keys from the earlier run, "
+                         f"but these have no table {no_table} or no row counts {no_count}. "
+                         "Run without options.")
+    if no_cols:
+        # columns_found.csv lists only keys present in at least one case.
+        absent_all = [k for k in no_cols if not old_counts.loc[
+            old_counts["key"] == k, "present"].any()]
+        if set(no_cols) - set(absent_all):
+            raise SystemExit(f"STOP: no column list for {sorted(set(no_cols) - set(absent_all))} "
+                             "in columns_found.csv. Run without options.")
+if not SEL:
+    print("01a: no key to read (nothing missing); report rebuilt from the earlier run.")
+print(f"01a: reading {len(SEL)} of {len(KEYS)} keys: {', '.join(SEL) or '-'}", flush=True)
+
+# ---------------------------------------------------------------------------
 # 1. Case list (00_config, stage 00a)
 # ---------------------------------------------------------------------------
 cases = pd.read_csv(CONFIG_DIR / "study_cases.csv")
@@ -201,11 +265,11 @@ check("Every outputs.h5 exists",
 # 2. Pre-pass: string widths and column lists per key (metadata only), so that
 #    every string column gets a fixed width wide enough for all cases.
 # ---------------------------------------------------------------------------
-width = {k: {} for k in KEYS}           # key -> column -> max bytes
-file_cols_seen = {k: set() for k in KEYS}
+width = {k: {} for k in SEL}            # key -> column -> max bytes
+file_cols_seen = {k: set() for k in SEL}
 for p in cases["outputs_h5"]:
     with h5py.File(p, "r") as f:
-        for k in KEYS:
+        for k in SEL:
             if k not in f:
                 continue
             cols = [c.decode() for c in f[k]["columns"]]
@@ -215,21 +279,22 @@ for p in cases["outputs_h5"]:
                 if dt.kind == "S":
                     width[k][c] = max(width[k].get(c, 1), dt.itemsize)
 
-check("Each key has the same columns in every case where it is present",
+check("Each key has the same columns in every case where it is present"
+      + (" (keys read in this run)" if PARTIAL else ""),
       all(len(v) <= 1 for v in file_cols_seen.values()),
       "; ".join(f"{k}: {sorted(v)}" for k, v in file_cols_seen.items() if len(v) > 1)
-      or "same in every case")
+      or f"same in every case ({len(SEL)} keys)")
 
 # ---------------------------------------------------------------------------
 # 3. Read every key of every case and append to one long table per key.
 # ---------------------------------------------------------------------------
 TABLE_DIR.mkdir(parents=True, exist_ok=True)
 CHECK_REPORT.parent.mkdir(parents=True, exist_ok=True)
-for k in KEYS:
+for k in SEL:
     (TABLE_DIR / f"{k}.h5").unlink(missing_ok=True)
 
 stores = {k: pd.HDFStore(TABLE_DIR / f"{k}.h5", mode="w",
-                         complevel=5, complib="blosc:zstd") for k in KEYS}
+                         complevel=5, complib="blosc:zstd") for k in SEL}
 id_width = {"batch": int(cases["batch"].str.len().max()),
             "arm": int(cases["arm"].str.len().max()),
             "case": int(cases["case"].str.len().max())}
@@ -241,7 +306,7 @@ t0 = time.time()
 try:
     for n, row in enumerate(cases.itertuples(index=False), start=1):
         with h5py.File(row.outputs_h5, "r") as f:
-            for k in KEYS:
+            for k in SEL:
                 df, fcols = read_key(f, k)
                 if df is None:
                     counts.append((row.batch, row.arm, row.level, row.case, k, False, 0))
@@ -274,10 +339,25 @@ finally:
 
 counts = pd.DataFrame(counts, columns=["batch", "arm", "level", "case", "key",
                                        "present", "rows"])
-counts.to_csv(OUT_DIR / "row_counts_outputs.csv", index=False)
+if PARTIAL:
+    # Keep the counts and column lists of the keys not read in this run.
+    counts = pd.concat([old_counts[old_counts["key"].isin(KEPT)], counts],
+                       ignore_index=True)
+    for r in old_columns.itertuples(index=False):
+        if r.key in KEPT:
+            columns_found[r.key] = (str(r.columns_in_file).split(" "),
+                                    str(r.columns_written).split(" "))
+# Rows in case order (study_cases.csv), then KEYS order, as a full run writes them.
+key_pos = {k: i for i, k in enumerate(KEYS)}
+case_pos = {c: i for i, c in enumerate(cases["case"])}
+counts = (counts.assign(_c=counts["case"].map(case_pos), _k=counts["key"].map(key_pos))
+          .sort_values(["_c", "_k"]).drop(columns=["_c", "_k"]).reset_index(drop=True)
+          .astype({"present": bool, "rows": "int64", "level": float}))
+columns_found = {k: columns_found[k] for k in KEYS if k in columns_found}
+counts.to_csv(COUNTS_CSV, index=False)
 pd.DataFrame([(k, " ".join(v[0]), " ".join(v[1])) for k, v in columns_found.items()],
              columns=["key", "columns_in_file", "columns_written"]
-             ).to_csv(OUT_DIR / "columns_found.csv", index=False)
+             ).to_csv(COLUMNS_CSV, index=False)
 
 # ---------------------------------------------------------------------------
 # 4. Checks
@@ -302,8 +382,10 @@ check("Rows written = rows read, per key", not bad,
 # 4c. No missing values in Value.
 vs = pd.DataFrame(value_stats, columns=["key", "case", "nan"])
 nan_keys = vs.groupby("key")["nan"].sum()
-check("No missing Value", int(nan_keys.sum()) == 0,
-      ", ".join(f"{k}: {v}" for k, v in nan_keys.items() if v) or "none")
+check("No missing Value" + (" (keys read in this run)" if PARTIAL else ""),
+      int(nan_keys.sum()) == 0,
+      ", ".join(f"{k}: {v}" for k, v in nan_keys.items() if v) or
+      f"none ({len(SEL)} keys)")
 
 # 4d. Absent keys.
 absent = counts[~counts["present"]]
@@ -344,6 +426,15 @@ spread.to_csv(OUT_DIR / "row_count_spread.csv", index=False)
 # ---------------------------------------------------------------------------
 # 5. Findings for the undocumented keys (cost_vom, heat_rate, fuel_price)
 # ---------------------------------------------------------------------------
+# Keys not read in this run: the sample cases come from their stage 01 tables.
+for k in UNDOCUMENTED_KEYS:
+    if k in SEL or not (TABLE_DIR / f"{k}.h5").is_file():
+        continue
+    for row in cases.itertuples(index=False):
+        if (row.batch, row.arm, float(row.level)) in SAMPLE_CASES:
+            samples[(k, row.case)] = pd.read_hdf(TABLE_DIR / f"{k}.h5", "data",
+                                                 where=f'case == "{row.case}"')
+
 und_rows = []
 und_text = []
 for k in UNDOCUMENTED_KEYS:
@@ -394,6 +485,12 @@ lines = [f"## 01a_load_outputs — {'PASS' if ok else 'FAIL'}\n",
          f"{len(KEYS)} keys (`docs/data_dictionary.md`, \"Outputs read from each run\", "
          "with `valnew`, `reduced_cost`, `lcoe_built` from its SMR paragraph). "
          "Values kept in model units (float32 as stored).\n",
+         ("This run read every key.\n" if not PARTIAL else
+          f"**Partial run:** this run read {len(SEL)} key(s): "
+          + ", ".join(f"`{k}`" for k in SEL)
+          + f". The other {len(KEPT)} keys were not re-read: their tables, row counts "
+          "and column lists are from the earlier full run. The NaN and same-columns "
+          "checks cover only the keys read in this run.\n"),
          f"Tables: `outputs/01_ingest/outputs/<key>.h5` (pandas HDFStore, table format, "
          "key `data`). Counts: `outputs/01_ingest/row_counts_outputs.csv`.\n",
          "### Checks\n",
