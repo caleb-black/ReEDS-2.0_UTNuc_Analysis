@@ -9,7 +9,7 @@ docs/plan.md, stage 01_ingest. For every case in 00_config/study_cases.csv:
    (key `crf`, layout of read_h5, L420-433); if inputs.h5 has no `crf` key, or
    there is no inputs.h5, from <case>/inputs_case/crf.csv. ReEDS writes it with
    write_to_inputs_h5 (calc_financial_inputs.py L516-519 at 0c0ea27), which
-   names the last column `Value` (io.py L1786-1788), for the modeled years
+   names the last column `Value` (io.py L1789-1790), for the modeled years
    only (`t == modeled_year`, L516).
 3. <case>/inputs_case/scalars.csv (name, value), for 03b2: results.py
    calc_systemcost reads `trans_crp` from it with reeds/io.py get_scalars
