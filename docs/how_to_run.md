@@ -97,3 +97,26 @@ Never change a decision on a stage branch.
 - Do not paste the thread history or raw data into a session. The agents read the files that they need.
 - Type `/cost` to see the use of the session.
 - Start the Cost-driver analyst and the Explainer only at stage 04.
+## 6. Open the outputs as CSV (D49)
+
+The pipeline keeps its tables as `.h5`. To get CSV copies of the stage 01 and stage 03 tables:
+
+```
+conda activate reeds
+python tools/export_csv.py
+```
+
+The copies go to `outputs/csv/`, under the same path as the `.h5` file, one file per batch and arm. For example: `outputs/csv/03_derive/capacity_generation/UON_ref.csv`. Every file opens in Excel (the largest has about 544,000 rows). `outputs/csv/index.csv` lists every file with its rows and columns. Units are in `docs/data_dictionary.md`; stage 03 tables also have a `unit` column, stage 01 tables do not. Stage 04 tables are already CSV, in `outputs/04_analyze/`.
+
+Run it again after any stage that changes its tables; unchanged tables are skipped. `--tables prices_region` exports only that table; `--force` redoes it.
+
+**Large tables.** `gen_h`, `reqt_quant`, `reqt_price`, `tran_util_h_rep` and `reduced_cost` have 6 to 57 million rows and are not exported. Read only the part you need, for example:
+
+```python
+import pandas as pd
+df = pd.read_hdf('outputs/01_ingest/outputs/gen_h.h5', 'data',
+                 where='case == "UON_20261022_3G_ref" & r == "p25" & t == 2050')
+df.to_csv('gen_h_p25_2050.csv', index=False)
+```
+
+Every column except `Value` can go in `where=` (`batch`, `arm`, `level`, `case`, `r`, `t`, `i`, `h`, ...). `python tools/export_csv.py --tables gen_h` would export a whole table, one file per case, but it takes a long time and several GB.

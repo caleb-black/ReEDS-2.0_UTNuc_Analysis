@@ -31,6 +31,7 @@ outputs/          # generated artifacts (git-ignored or LFS)
 docs/             # plan.md, decisions.md, data_dictionary.md, how_to_run.md
 notes/            # agent proposals, analysis notes, figure text (D24)
 archive/          # superseded scripts awaiting deletion (see cleanup rules)
+tools/            # helpers outside the stage order, e.g. CSV copies of outputs (D49)
 ```
 Script names per stage are listed in `docs/plan.md`.
 
@@ -51,7 +52,7 @@ Script names per stage are listed in `docs/plan.md`.
 ## Scenarios
 - Arms, levels, baselines, groups and metrics: `docs/data_dictionary.md`.
 - Run folders: listed in `00_config/` (stage 00a).
-- Decisions D1 to D46: `docs/decisions.md`. Do not change a decision in code; propose a
+- Decisions D1 to D46 and D49: `docs/decisions.md`. Do not change a decision in code; propose a
   new decision entry instead.
 - Compare only within an arm, against that arm's own 0 GW case in the same batch (D2). Never mix UON and UOS (D26).
 
