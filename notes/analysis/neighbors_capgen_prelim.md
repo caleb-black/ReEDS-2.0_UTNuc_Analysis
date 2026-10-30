@@ -95,3 +95,48 @@ Same main story: p25 imports less, p33 is the largest neighbor change (Gas-CC ge
 ## Next checks if you want to go further
 - Done above (29 Oct): firm capacity proxy, p10/z28 by level and arm, line flows, UOS.
 - Still open: reserve-margin prices (`reqt_price` type `res_marg`) by region, to test the CC-to-CT reading; the 2 GW threshold at other arms; whether the p26 Gas-CT peak at 2 GW (then lower at 3 GW) is real or a tie.
+
+## Threshold check across arms (added 29 Oct, still PRELIMINARY)
+
+Question: does the "about 2 GW" switch (p25 stops cutting gas CC, and the effect spills to neighbors) hold in every arm? UON: all 6 arms, every 0.25 GW level, 2047 and 2050. UOS: ref, loadhigh, loadlow, every 0.5 GW level. Diff = case minus same arm's 0 GW case (D2); UON and UOS kept apart (D26). Sources: `03_derive/capacity_generation.h5`, stage 01 `tran_flow_rep_ann`, raw `gen_h_stress`. Scratch scripts `arms.py`, `arms_abs.py` (session scratchpad), not pipeline code.
+
+### Facts
+
+1. **p25 Gas-CC capacity falls about 1 GW per GW of SMR, then stops at an arm-specific cap.** Diff at saturation (2047): ref and smrcons -1.94 GW (reached at 1.75-2.0 GW); gaslow -2.39 and pvadv -2.40 (reached at 2.25-2.5 GW); loadhigh pauses at -1.95 around 2.0-2.25 GW, then goes on to -2.59 at 3 GW; loadlow does not saturate (-2.91 at 3 GW).
+2. **The cap equals the new Gas-CC p25 builds after 2041 in that arm's 0 GW case.** p25 Gas-CC at 0 GW minus 2041 (GW):
+
+   | UON arm | 2044 | 2047 | 2050 | Diff at 3 GW, 2047 |
+   | --- | --- | --- | --- | --- |
+   | ref / smrcons | 1.73 | 1.94 | 2.19 | -1.94 |
+   | gaslow | 2.39 | 2.39 | 2.66 | -2.39 |
+   | pvadv | 2.33 | 2.40 | 2.95 | -2.40 |
+   | loadhigh | 1.99 | 2.62 | 2.94 | -2.59 |
+   | loadlow | 2.48 | 3.02 | 3.88 | -2.91 |
+
+   At 3 GW, p25 Gas-CC stays at its 2041 value in every arm except loadhigh and loadlow, which add small amounts after 2047. Existing CC is not retired. (loadhigh's pause at 2 GW lines up with its 2044 headroom of 1.99.)
+3. **The spillover starts where the cap binds, in every arm.** Once the CC cap is reached, p25 Gas-CT starts to fall, neighbor Gas-CT rises, p33 Gas-CC generation falls, and the inflow cut to p25 speeds up.
+
+   | UON arm (2047) | knee | p25 CT Diff at 3 GW | p33 CC gen at knee / 3 GW (TWh) | inflow cut at knee / 3 GW (TWh) |
+   | --- | --- | --- | --- | --- |
+   | ref, smrcons | 1.75 to 2.0 | -1.72 GW | -0.84 / -3.33 | -3.74 / -8.93 |
+   | loadhigh | 1.75 to 2.0 | -0.53 GW | -0.81 / -0.89 (2050: -3.23 / -2.79) | -2.55 / -4.58 |
+   | gaslow | 2.25 to 2.5 | -0.44 GW | -1.64 / -2.86 | -3.33 / -6.20 |
+   | pvadv | 2.25 to 2.5 | -0.88 GW | -0.27 / -1.34 | -4.19 / -7.01 |
+   | loadlow | none by 3 GW | -0.07 GW | about 0 | steady, -5.40 at 3 GW |
+
+   Below the knee, the inflow cut is about 1 TWh per GW in every arm.
+4. **Stress-period output (firm-capacity proxy).** In every arm, p25 SMR gives 894-908 MW per GW (2,681-2,763 MW at 3 GW), and p25 Gas-CC drops by about the same amount up to 2 GW. At 3 GW, p25 CC drops only -1,721 MW in ref, against -2,100 to -2,830 in the other arms. p25 CT drops most in ref (-569 MW). Neighbors' (incl. p26) CT stress output rises in all arms except loadlow 2047 (+88 to +422 MW at 3 GW). Neighbor UPV stress output falls in loadhigh (-890 MW in 2047) and pvadv 2050 (-466).
+5. **p25 → p10 flow** barely moves in any arm (|Diff| ≤ 1.4 TWh on about 10 TWh). In ref it falls slightly; in pvadv, loadhigh and loadlow it rises slightly.
+6. **UOS shows the same rule.** Headroom (0 GW minus 2041, 2047): ref 0.83, loadhigh 2.55, loadlow 2.74 GW. The CC Diff caps at ref -0.83 (reached at 1.5 GW), loadhigh -2.55, loadlow -2.69 (both reached near 3 GW). The spillover follows: UOS ref p25 CT -2.56 GW and inflow cut -11.0 TWh at 3 GW, the largest of all; loadhigh and loadlow are milder.
+
+### INFERENCE (not checked against the model docs)
+
+- The "2 GW threshold" is not a fixed number. It is how much new Gas-CC p25 would otherwise build from 2044 on. Up to that amount, the SMR takes the place of p25's planned CC, and the neighbors see little. Past it, there is no planned CC left to avoid, so the SMR pushes out p25 CT and imports, and neighbors shift from CC energy to CT capacity.
+- So arm order follows the size of p25's planned CC build. ref has the smallest (knee about 2 GW), gaslow and pvadv are in the middle (about 2.4), loadhigh is larger but staged (a pause at 2 GW), and loadlow is largest (no knee by 3 GW, since low load delays CC to later years). UOS ref plans less new CC (knee about 1 GW) because of the upgrades, so its spillover is the largest.
+- Whether the plateau is a hard limit in the model (e.g. no early retirement of existing CC) or an economic choice is not shown by these outputs. I have not checked `b_inputs.gms`/`c_supplymodel.gms` at 0c0ea27 for retirement rules.
+
+### Possible next checks
+
+- Check retirement rules at 0c0ea27, to see whether existing CC can retire early (this explains why the plateau sits at the 2041 fleet).
+- See whether the knee shows up in the forcing-cost slope by arm (04c/04f). Cost per GW may step up past the cap.
+- Neighbor CT build by region past the knee, per arm.
