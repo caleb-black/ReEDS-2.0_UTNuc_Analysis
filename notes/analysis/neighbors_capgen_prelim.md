@@ -41,8 +41,57 @@ p26 (utah_rest, also beside p25): wind -210 to -340 MW, Gas-CT +80 to +220 MW; g
 3. **Less new wind near p25, more gas CT.** p24, p26, p31 and p16 build less onshore wind, and p21, p24, p26 and p33 build more Gas-CT. One reading: the SMR covers energy needs, so less energy-heavy wind is built, and some CT is added for capacity; it may also relate to p25 building 1.2 to 1.7 GW less Gas-CT itself. Not checked against the reserve-margin outputs.
 4. **Prices fall most where gas is displaced or imports rise**: p24, p21, p33 (about -1 $/MWh), and p10 in 2047 (-2.2).
 
+## Follow-ups at 0 / 1 / 2 / 3 GW (added 29 Oct, still PRELIMINARY)
+
+Script `followups2.py`, output `followups2_out.txt` (session scratchpad). UON `ref` and UOS `ref`. Firm capacity: these runs use the stress-period reserve margin (`GSw_PRM_CapCredit` = 0, data dictionary), so `cap_firm` is not written; the proxy here is mean output over each case's 48 stress blocks per year (`gen_h_stress`, MW, `report_params.csv` L87), the same output `val_resmarg` values (`report.gms` L1077-1080). Line flows: `tran_flow_rep_ann` (stage 01; MWh, net, + = r to rr; `report_params.csv` L201).
+
+### 1. p25 is an import hub, and the SMR mostly cuts its imports
+At 0 GW (UON ref, 2044) p25 takes in about 32 TWh from p33 (8.5), p16 (7.9), p24 (7.0), p26 (4.4), p31 (2.3) and p12 (1.6), and sends about 12.9 TWh on to p10 over the DC line. With the SMR, the inflows shrink, while the outflow to p10 barely changes (it even drops 0.7 TWh):
+
+| Line (UON ref, TWh/yr into p25 unless noted) | 0 GW | Diff at 1 GW | 2 GW | 3 GW |
+| --- | --- | --- | --- | --- |
+| p33 to p25 (2050) | 9.9 | -0.6 | -1.2 | -2.8 |
+| p24 to p25 (2044) | 7.0 | -0.3 | -1.0 | -2.7 |
+| p16 to p25 (2044) | 7.9 | -0.4 | -1.2 | -2.2 |
+| p26 to p25 (2044) | 4.4 | -0.2 | -0.6 | -1.5 |
+| p31 to p25 (2044) | 2.3 | -0.3 | -0.4 | -0.7 |
+| p25 to p10 (2047) | 10.9 | -0.4 | -1.4 | -0.9 |
+
+So "neighbors import more" mostly means **neighbors send less power into p25**. p16 sends 2.2 TWh less but generates only 0.3 TWh less, so its power goes elsewhere. UOS shows the same pattern, slightly larger (p33 line -3.1 to -3.7, p24 -2.5 to -3.0 at 3 GW).
+
+### 2. Two regimes: below and above about 2 GW
+- **Up to about 2 GW, the SMR mainly replaces new gas CC inside p25.** p25 Gas-CC capacity: -1.0 GW at 1 GW, -1.7 GW at 2 GW, then flat (-1.7 GW at 3 GW, 2044). p25 Gas-CC generation: -6.1, -11.1, -13.0 TWh. Neighbors change little.
+- **Above about 2 GW, p25 has no more gas CC to drop, and the effect spills out.** p25 then drops Gas-CT capacity instead (-0.07, -0.46, -1.22 GW at 1/2/3 GW in 2044), and the neighbor changes jump: p33 Gas-CC generation -1.0 TWh at 2 GW to -3.6 at 3 GW; p24 wind generation -0.2 to -1.1; most line-flow changes are larger between 2 and 3 GW than between 0 and 2 GW.
+- UOS: same shape, but p25's gas-CC drop stops earlier (about -0.8 GW already at 1 GW), and p25 drops more Gas-CT (up to -2.6 GW). INFERENCE: the UOS gas fleet differs (upgrades), so less new CC is there to displace.
+
+### 3. Firm capacity: a gas-CC to gas-CT shift near p25
+Mean output in stress blocks (MW, UON ref, Diff at 1/2/3 GW):
+- p25: SMR +894 / +1,787 / +2,681 (about 89% of nameplate); Gas-CC -869 / -1,529 / -1,535; Gas-CT -16 / -137 / -385.
+- p33: Gas-CC +24 / -126 / -545; Gas-CT -10 / +27 / +174.
+- p26: onshore wind -23 / -78 / -81; Gas-CT +33 / +100 / +27.
+- p21: Gas-CC -41 / -41 / -139; Gas-CT about 0 / +2 / +55. p24: wind -7 / -7 / -51; Gas-CT +8 / +8 / +58.
+- This supports reading 3 above in sign: near p25, firm duty moves from gas CC (and some wind) to gas CT. The sizes outside p25 are small (50 to 550 MW). UOS shows the same, larger in p33 (Gas-CC -806 MW, Gas-CT +216 MW in stress) and p24 (Gas-CT capacity +525 MW, wind -528 MW at 3 GW in 2050).
+- INFERENCE: with the SMR covering energy and some firm need, the cheaper way to keep the reserve margin near p25 becomes CT capacity instead of CC; this was not checked against the reserve-margin prices.
+
+### 4. p10 and z28: a re-siting choice, not a steady SMR effect
+2047 total generation Diff (TWh) at 1 / 2 / 3 GW:
+
+| Arm | p10 | z28 |
+| --- | --- | --- |
+| ref | -2.7 / -4.8 / -6.2 | +1.7 / +3.9 / +3.1 |
+| smrcons | same as ref | same as ref |
+| loadhigh | +1.0 / -0.6 / -3.7 | +0.8 / +2.2 / +3.6 |
+| pvadv | +0.2 / +2.6 / +3.0 | -0.4 / -0.4 / -1.1 |
+| loadlow | +0.8 / +0.8 / +1.9 | -0.7 / -1.4 / -3.1 |
+| gaslow | -0.7 / 0.0 / -0.2 | 0.0 / -0.1 / -0.2 |
+
+- The sign flips between arms (pvadv and loadlow go the other way from ref), and the two regions always move opposite. In ref it is UPV and battery (p10 -1.2 GW UPV, -1.4 GW battery at 3 GW; z28 +0.4 GW UPV, +0.6 GW Gas-CC).
+- UOS ref: same direction as UON ref but smaller (p10 UPV -0.6 GW and battery -0.3 GW in 2050; z28 UPV +0.7 GW).
+- INFERENCE: p10 and z28 are near-equal places for new solar and storage, and small changes elsewhere tip the choice. It should not be reported as an effect of the SMR on p10 without more checks.
+
+### 5. UOS overall
+Same main story: p25 imports less, p33 is the largest neighbor change (Gas-CC generation -4.3 to -4.9 TWh at 3 GW, larger than UON), wind-to-CT near p25 (p24, p26, p16), p10/z28 swap in the same direction but smaller.
+
 ## Next checks if you want to go further
-- Reserve-margin capacity (firm capacity) by region, to test reading 3 (CT up, wind down).
-- p10 / z28 at every level and arm, to see if the swap is a steady effect or a tie between two similar options.
-- Line flows p25-p33 and p25-p10 (`tran_flow_rep_ann`), to see where the SMR energy actually goes.
-- UOS, to see if p33 and the p10/z28 swap also appear there.
+- Done above (29 Oct): firm capacity proxy, p10/z28 by level and arm, line flows, UOS.
+- Still open: reserve-margin prices (`reqt_price` type `res_marg`) by region, to test the CC-to-CT reading; the 2 GW threshold at other arms; whether the p26 Gas-CT peak at 2 GW (then lower at 3 GW) is real or a tie.
