@@ -140,3 +140,36 @@ Question: does the "about 2 GW" switch (p25 stops cutting gas CC, and the effect
 - Check retirement rules at 0c0ea27, to see whether existing CC can retire early (this explains why the plateau sits at the 2041 fleet).
 - See whether the knee shows up in the forcing-cost slope by arm (04c/04f). Cost per GW may step up past the cap.
 - Neighbor CT build by region past the knee, per arm.
+
+## Follow-up A: can p25 gas CC retire? (added 29 Oct, PRELIMINARY)
+
+Facts, from 0c0ea27 and the run switches (`inputs_case/switches.csv`, same in UON and UOS):
+- The runs use `GSw_Retire=5`, `GSw_RetireYear=2027`, `GSw_RetirePenalty=1`. `cases.csv` L299 defines 5 as "same as 3 but nuclear can only retire after 2030". 3 is "new/existing nuclear/coal/gas can retire after minimum age".
+- `b_inputs.gms` L5039-5040: with Sw_Retire 3 or 5, all gas vintages, new and existing, are retirable (`valret`). L5048-5049: only existing (`initv`) plants must first reach `min_retire_age`, which is 20 years for Gas-CC and Gas-CT (`inputs/plant_characteristics/min_retire_age.csv`). L5066: no retirements before `Sw_Retireyear`.
+- `c_model.gms` L555-580: retirable capacity must be ≤ past investment (or exogenous capacity) and fall monotonically (`eq_cap_new_retub`, `eq_cap_new_retmo`, L750-L800). Non-retirable capacity is held equal (`eq_cap_new_noret`, L693).
+- `d_objective.gms` L209-216: retirement penalty, `- cost_fom × retire_penalty(t) × (CAP - INV - ...)` for retirable capacity. `inputs/financials/retire_penalty.csv` gives 1.0 through 2034 and 0.5 from 2035 to 2050. `runfiles.csv` L211 describes it as "penalty for retiring a power plant expressed as a fraction of FOM". `report.gms` L1707-1710 repeats the term in the report.
+- In every arm's 3 GW case, p25 Gas-CC stays at its 2041 level (or above it), so the model retires no p25 CC.
+
+So the plateau is **not a hard limit**. The model is allowed to retire the CC p25 built by 2041 and does not.
+
+INFERENCE: from 2035, retiring a gas plant saves only half of its fixed O&M (the penalty credits the other half for capacity kept). Its capital is already spent, and it still provides firm capacity in stress periods. So keeping it is cheaper than retiring it, and past the cap the SMR displaces CT and imports instead. I have not checked whether the penalty term is in our system cost (03b2 uses the `systemcost` categories; `report.gms` L1707 is in the objective report block). Worth checking before using this in text.
+
+## Follow-up B: does the knee show in the forcing cost? (added 29 Oct, PRELIMINARY)
+
+Source: `04f_forcing_cost_*.csv` and provisional `04g_cost_parts_step_*.csv`, WECC, 2044-2050, step slope in $B per GW (D41, no fit).
+
+| UON arm | knee | slope before knee | slope after knee |
+| --- | --- | --- | --- |
+| ref | 1.75-2.0 | 1.39-1.40 (to 1.4 GW) | 1.44-1.48 |
+| smrcons | 1.75-2.0 | 3.71-3.73 | 3.76-3.81 |
+| gaslow | 2.25-2.5 | 1.86-1.93 | 2.05, 1.97 |
+| pvadv | 2.25-2.5 | 1.39-1.46 | 1.44, 1.51 |
+| loadhigh | about 2 | 1.23-1.34 | 1.33-1.38 |
+| loadlow | none | 1.43-1.83 (noisy) | 1.67-1.80 |
+
+UOS: ref (knee about 1 GW) 1.40-1.42, then 1.40-1.51; loadhigh 1.30-1.36 throughout; loadlow 1.61-1.79.
+
+- The total slope rises by only about 3-7% after the knee in ref, smrcons, gaslow and pvadv. That is about the size of the step-to-step noise in loadlow, so it is a weak signal.
+- The provisional capacity and generation parts swing more (e.g. ref capacity 2.65-3.17, generation -1.16 to -1.79 per GW) but move in opposite directions. They don't show a clean step at the knee.
+
+INFERENCE: the knee changes *what* is displaced (planned CC first, then CT and imports), but the cost per GW barely changes. Past the knee, the SMR saves less in energy (less gas burned per GW) and avoids less capacity, so the forcing cost creeps up a little. It doesn't jump.
